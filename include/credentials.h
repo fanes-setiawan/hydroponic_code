@@ -1,0 +1,7 @@
+#ifndef CREDENTIALS_H
+#define CREDENTIALS_H
+
+#define WIFI_SSID "Tselhome-0A06"
+#define WIFI_PASSWORD "44226533"
+
+#endif // CREDENTIALS_H

@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../python_iot"
+		},
+		{
+			"name": "hydroponik_code",
+			"path": "."
+		}
+	],
+	"settings": {}
+}
