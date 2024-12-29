@@ -2,8 +2,15 @@
 #define CREDENTIALS_H
 
 // WiFi credentials
-#define WIFI_SSID "Tselhome-0A06"
-#define WIFI_PASSWORD "44226533"
+// #define WIFI_SSID "Tselhome-0A06"
+// #define WIFI_PASSWORD "44226533"
+
+// #define WIFI_SSID "Carakan-Developer"
+// #define WIFI_PASSWORD "2wsx1qaz"
+
+#define WIFI_SSID "KONTRAKKAN 01"
+#define WIFI_PASSWORD "KEPOAMAT"
+
 
 // Firebase credentials
 #define FIREBASE_HOST "hydsmartfire.firebaseio.com"
@@ -24,6 +31,8 @@
 #define FIREBASE_TDS_COLLECTION "EX-tds"
 #define FIREBASE_TDS_VL_FIELD "fields/tdsLevel/integerValue"
 #define FIREBASE_TDS_TM_FIELD "fields/createdAt/timestampValue"
+//remote
+#define FIREBASE_REMOTE_COLLECTION "remote"
 
 
 
