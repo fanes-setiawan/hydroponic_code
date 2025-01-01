@@ -33,6 +33,8 @@
 #define FIREBASE_TDS_TM_FIELD "fields/createdAt/timestampValue"
 //remote
 #define FIREBASE_REMOTE_COLLECTION "remote"
+//schedule
+#define FIREBASE_SCHEDULE_COLLECTION "schedule"
 
 
 

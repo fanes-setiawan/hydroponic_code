@@ -6,5 +6,6 @@
 
 // Deklarasi fungsi
 String getTimestamp();
+void setupTime();
 
 #endif
