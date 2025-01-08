@@ -8,9 +8,8 @@
 RemoteModel remoteModel = RemoteModel();
 ScheduleModel scheduleModel = ScheduleModel();
 
-// Offset waktu UTC ke zona waktu lokal Anda (contoh: UTC+7 untuk WIB)
-const long gmtOffset_sec = 7 * 3600;  // 7 jam UTC (WIB)
-const int daylightOffset_sec = 0; // Jika tidak menggunakan Daylight Saving Time
+const long gmtOffset_sec = 7 * 3600;
+const int daylightOffset_sec = 0; 
 
 
 void setup()
@@ -25,8 +24,8 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   Serial.println("looping");
-  // RemoteModel remote =  readDataRemoteFromFirestore();
-  ScheduleModel schedule = readDataScheduleFromFirestore();
-  Serial.println("MAIN TIME"+schedule.scheduled_time);
+  RemoteModel remote =  readDataRemoteFromFirestore();
+  // ScheduleModel schedule = readDataScheduleFromFirestore();
+  // Serial.println("MAIN TIME"+schedule.scheduled_time);
   delay(10000);
 }

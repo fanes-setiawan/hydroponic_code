@@ -84,14 +84,11 @@ RemoteModel readDataRemoteFromFirestore()
   if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_REMOTE_COLLECTION))
   {
     String jsonString = firebaseData.payload();
-    StaticJsonDocument<4096> doc; // Tingkatkan ukuran jika data JSON besar
-
-    // Parsing JSON
+    StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, jsonString);
 
     if (!error)
     {
-      // Cetak seluruh dokumen JSON untuk debugging
       Serial.println("Dokumen Firestore:");
       serializeJsonPretty(doc, Serial);
       Serial.println();
@@ -108,6 +105,7 @@ RemoteModel readDataRemoteFromFirestore()
         remoteModel.mixer = fields["mixer"]["booleanValue"];
         remoteModel.waterPump = fields["waterPump"]["booleanValue"];
         remoteModel.autoMode = fields["auto"]["booleanValue"];
+        remoteModel.autoCheck = fields["autoCheck"]["integerValue"];
 
         // Cetak data yang diambil
         Serial.println("Data Remote Model:");
@@ -125,6 +123,8 @@ RemoteModel readDataRemoteFromFirestore()
         Serial.println(remoteModel.waterPump);
         Serial.print("autoMode: ");
         Serial.println(remoteModel.autoMode);
+        Serial.print("autoCheck: ");
+        Serial.println(remoteModel.autoCheck);
       }
     }
     else
