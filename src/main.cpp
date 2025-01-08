@@ -4,6 +4,7 @@
 #include "remote_model.h"
 #include "schedule_model.h"
 #include "sensor_tds.h"
+#include "sensor_ph.h"
 
 
 
@@ -12,6 +13,7 @@ const int daylightOffset_sec = 0;
 
 //sensor pin
 TdsSensor tdsSensor(34);
+PhSensor phSensor(35); 
 
 void setup()
 {
@@ -24,10 +26,15 @@ void setup()
 void loop()
 {
   Serial.println("looping");
-  float tdsValue = tdsSensor.read();  // Membaca nilai TDS dari sensor
-  Serial.print("TDS Value: ");
-  Serial.println(tdsValue);  // Menampilkan nilai TDS pada serial monitor
+  float tdsValue = tdsSensor.read();
+  float phValue = phSensor.read();  // Membaca nilai pH
 
+  //tds
+  Serial.print("TDS Value: ");
+  Serial.println(tdsValue); 
+  //ph
+  Serial.print("Nilai pH: ");
+  Serial.println(phValue);
   // RemoteModel remote =  readDataRemoteFromFirestore();
   // ScheduleModel schedule = readDataScheduleFromFirestore();
   // Serial.println("MAIN TIME"+schedule.scheduled_time);
