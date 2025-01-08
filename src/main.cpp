@@ -3,14 +3,15 @@
 #include "firebase_utils.h"
 #include "remote_model.h"
 #include "schedule_model.h"
+#include "sensor_tds.h"
 
 
-RemoteModel remoteModel = RemoteModel();
-ScheduleModel scheduleModel = ScheduleModel();
 
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0; 
 
+//sensor pin
+TdsSensor tdsSensor(34);
 
 void setup()
 {
@@ -22,9 +23,12 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
   Serial.println("looping");
-  RemoteModel remote =  readDataRemoteFromFirestore();
+  float tdsValue = tdsSensor.read();  // Membaca nilai TDS dari sensor
+  Serial.print("TDS Value: ");
+  Serial.println(tdsValue);  // Menampilkan nilai TDS pada serial monitor
+
+  // RemoteModel remote =  readDataRemoteFromFirestore();
   // ScheduleModel schedule = readDataScheduleFromFirestore();
   // Serial.println("MAIN TIME"+schedule.scheduled_time);
   delay(10000);
