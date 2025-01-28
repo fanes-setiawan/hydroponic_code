@@ -5,6 +5,7 @@
 #include "schedule_model.h"
 #include <ArduinoJson.h>
 #include <Firebase_ESP_Client.h>
+#include "calibration_tds_model.h"
 
 // Inisialisasi variabel Firebase
 FirebaseData firebaseData;
@@ -89,9 +90,7 @@ RemoteModel readDataRemoteFromFirestore()
 
     if (!error)
     {
-      Serial.println("Dokumen Firestore:");
-      serializeJsonPretty(doc, Serial);
-      Serial.println();
+      // serializeJsonPretty(doc, Serial);
 
       // Iterasi melalui array "documents"
       JsonArray documents = doc["documents"].as<JsonArray>();
@@ -108,23 +107,23 @@ RemoteModel readDataRemoteFromFirestore()
         remoteModel.autoCheck = fields["autoCheck"]["integerValue"];
 
         // Cetak data yang diambil
-        Serial.println("Data Remote Model:");
-        Serial.print("phUp: ");
-        Serial.println(remoteModel.phUp);
-        Serial.print("phDown: ");
-        Serial.println(remoteModel.phDown);
-        Serial.print("water: ");
-        Serial.println(remoteModel.water);
-        Serial.print("nutrisi: ");
-        Serial.println(remoteModel.nutrisi);
-        Serial.print("mixer: ");
-        Serial.println(remoteModel.mixer);
-        Serial.print("waterPump: ");
-        Serial.println(remoteModel.waterPump);
-        Serial.print("autoMode: ");
-        Serial.println(remoteModel.autoMode);
-        Serial.print("autoCheck: ");
-        Serial.println(remoteModel.autoCheck);
+        // Serial.println("Data Remote Model:");
+        // Serial.print("phUp: ");
+        // Serial.println(remoteModel.phUp);
+        // Serial.print("phDown: ");
+        // Serial.println(remoteModel.phDown);
+        // Serial.print("water: ");
+        // Serial.println(remoteModel.water);
+        // Serial.print("nutrisi: ");
+        // Serial.println(remoteModel.nutrisi);
+        // Serial.print("mixer: ");
+        // Serial.println(remoteModel.mixer);
+        // Serial.print("waterPump: ");
+        // Serial.println(remoteModel.waterPump);
+        // Serial.print("autoMode: ");
+        // Serial.println(remoteModel.autoMode);
+        // Serial.print("autoCheck: ");
+        // Serial.println(remoteModel.autoCheck);
       }
     }
     else
@@ -141,6 +140,50 @@ RemoteModel readDataRemoteFromFirestore()
 
   return remoteModel;
 }
+
+//patch data remote to firebase
+void patchDataRemoteToFirestore(const String &field, const String &value)
+{
+  FirebaseJson json;
+
+  // Deteksi tipe data dan set JSON
+  if (value.indexOf('.') != -1)
+  {
+    json.set("/fields/" + field + "/doubleValue", value.toFloat());
+  }
+  else if (value == "true" || value == "false")
+  {
+    json.set("/fields/" + field + "/booleanValue", value == "true");
+  }
+  else if (value.toInt() != 0 || value == "0")
+  {
+    json.set("/fields/" + field + "/integerValue", value.toInt());
+  }
+  else
+  {
+    json.set("/fields/" + field + "/stringValue", value);
+  }
+
+  // Menampilkan data JSON untuk debugging
+  Serial.println("JSON Payload: ");
+  Serial.println(json.raw());
+
+  // Nama koleksi dan dokumen
+  const String documentPath = FIREBASE_REMOTE_COLLECTION + String("/") +  DOCUMENT_ID;
+
+  // Mengirim data ke Firestore
+  if (Firebase.Firestore.patchDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath, json.raw(), field))
+  {
+    Serial.println("Data sent successfully!");
+    Serial.println(firebaseData.payload());
+  }
+  else
+  {
+    Serial.println("Failed to send data!");
+    Serial.println(firebaseData.errorReason());
+  }
+}
+
 
 ScheduleModel readDataScheduleFromFirestore()
 {
@@ -228,3 +271,119 @@ ScheduleModel readDataScheduleFromFirestore()
 
   return scheduleModel;
 }
+
+CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
+  CalibrationTdsModel calibrationTdsModel;
+
+  if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_CALIBRATION_COLLECTION)) {
+    String jsonString = firebaseData.payload();
+    StaticJsonDocument<4096> doc;
+    DeserializationError error = deserializeJson(doc, jsonString);
+
+    Serial.print("err: ");
+    Serial.println(error.c_str());
+
+    if (!error) {
+      // Pastikan "documents" ada dalam JSON
+      if (doc.containsKey("documents")) {
+        JsonArray documents = doc["documents"].as<JsonArray>();
+
+        Serial.print("documents: ");
+        Serial.println(documents.size());
+
+        // Iterasi melalui dokumen di array
+        for (JsonObject document : documents) {
+          if (document.containsKey("fields")) {
+            JsonObject fields = document["fields"];
+
+            Serial.print("document[fields]: ");
+            serializeJson(fields, Serial);
+            Serial.println();
+
+            // Ambil nilai dari fields
+            if (fields.containsKey(" fluid_ppm")) {
+              // Tangani tipe integerValue atau doubleValue
+              if (fields[" fluid_ppm"].containsKey("integerValue")) {
+                calibrationTdsModel.fluid_ppm = fields[" fluid_ppm"]["integerValue"].as<float>();
+              } else if (fields[" fluid_ppm"].containsKey("doubleValue")) {
+                calibrationTdsModel.fluid_ppm = fields[" fluid_ppm"]["doubleValue"];
+              }
+            }
+
+            if (fields.containsKey("status")) {
+              if (fields["status"].containsKey("booleanValue")) {
+                calibrationTdsModel.status = fields["status"]["booleanValue"];
+              }
+            }
+
+            if (fields.containsKey("updatedAt")) {
+              if (fields["updatedAt"].containsKey("timestampValue")) {
+                calibrationTdsModel.updateAt = fields["updatedAt"]["timestampValue"].as<String>();
+              }
+            }
+
+            // Cetak data yang diambil
+            Serial.print("fluid_ppm: ");
+            Serial.println(calibrationTdsModel.fluid_ppm);
+            Serial.print("status: ");
+            Serial.println(calibrationTdsModel.status);
+            Serial.print("updateAt: ");
+            Serial.println(calibrationTdsModel.updateAt);
+          }
+        }
+      } else {
+        Serial.println("No 'documents' key found in JSON!");
+      }
+    } else {
+      Serial.println("Failed to parse JSON!");
+      Serial.println(error.c_str());
+    }
+  } else {
+    Serial.println("Failed to get document from Firestore!");
+    Serial.println(firebaseData.errorReason());
+  }
+
+  return calibrationTdsModel;
+}
+
+//patch status
+void patchDataCalibrationTdsToFirestore(const String &field, const String &value)
+{
+  FirebaseJson json;
+
+  // Deteksi tipe data dan set JSON
+  if (value.indexOf('.') != -1)
+  {
+    json.set("/fields/" + field + "/doubleValue", value.toFloat());
+  }
+  else if (value == "true" || value == "false")
+  {
+    json.set("/fields/" + field + "/booleanValue", value == "true");
+  }
+  else if (value.toInt() != 0 || value == "0")
+  {
+    json.set("/fields/" + field + "/integerValue", value.toInt());
+  }
+  else
+  {
+    json.set("/fields/" + field + "/stringValue", value);
+  }
+
+  Serial.println("JSON Payload: ");
+  Serial.println(json.raw());
+
+  const String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") +  ID_TDS_CALIBRATION;
+
+  if (Firebase.Firestore.patchDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath, json.raw(), field))
+  {
+    Serial.println("Data sent successfully!");
+    Serial.println(firebaseData.payload());
+  }
+  else
+  {
+    Serial.println("Failed to send data!");
+    Serial.println(firebaseData.errorReason());
+  }
+}
+
+

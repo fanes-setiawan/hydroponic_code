@@ -1,5 +1,6 @@
 #include "sensor_ph.h"
 
+
 PhSensor::PhSensor(int pin) : _pin(pin), _neutralVoltage(2.5), _acidSlope(-3.5) {}
 
 void PhSensor::begin() {

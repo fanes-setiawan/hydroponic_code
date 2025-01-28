@@ -3,16 +3,15 @@
 
 #include <Arduino.h>
 
-class TdsSensor {
-public:
-    TdsSensor(int pin);    // Konstruktor untuk menentukan pin sensor
-    void begin();          // Inisialisasi sensor
-    float read();          // Membaca nilai TDS dari sensor
+// Konstanta
+#define SCOUNT 10      // Jumlah sampel
+#define VREF 3.3        // Referensi tegangan ADC
 
-private:
-    int _pin;              // Pin untuk sensor TDS
-    float _sensorValue;    // Nilai yang dibaca dari sensor
-    float _voltage;        // Nilai tegangan sensor
-};
+// Deklarasi fungsi
+void setupTdsSensor(uint8_t pin);
+void loopTdsSensor(float temperature);
+
+// Fungsi utility
+int getMedianNum(int bArray[], int iFilterLen);
 
 #endif

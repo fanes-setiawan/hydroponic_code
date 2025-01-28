@@ -7,6 +7,7 @@
 #include "credentials.h"
 #include "remote_model.h"
 #include "schedule_model.h"
+#include "calibration_tds_model.h"
 
 // Deklarasi variabel Firebase
 extern FirebaseData firebaseData;
@@ -18,7 +19,11 @@ extern FirebaseJson firebaseJson;
 void connectToFirebase();
 void sendDataPhToFirestore(float phLevel);
 void sendDataTdsToFirestore(float tdsLevel);
+void patchDataRemoteToFirestore(const String &field,const String &value);
+void patchDataCalibrationTdsToFirestore(const String &field,const String &value);
 RemoteModel readDataRemoteFromFirestore();
 ScheduleModel readDataScheduleFromFirestore();
+CalibrationTdsModel readDataCalibrationTdsFromFirestore();
+
 
 #endif
