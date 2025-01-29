@@ -3,11 +3,12 @@
 #include "firebase_utils.h"
 #include "remote_model.h"
 #include "schedule_model.h"
-#include "sensor_tds.h"
+// #include "sensor_tds.h"
 #include "sensor_ph.h"
 #include "controller.h"
 #include "water_controller.h"
 #include "sensor_tds_lib.h"
+#include "notification.h"
 
 
 #define RELAY_NUTRISI 2
@@ -28,21 +29,18 @@ const int daylightOffset_sec = 0;
 #define TDS_SENSOR_PIN 35
 float waterTemp = 25.0;
 
-#define TDS_PIN 35
-#define TEMPERATURE 25
-
 PhSensor phSensor(35); 
 
 
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("starting");
-  int sensorValue = analogRead(34); 
-  Serial.print("Sensor Value: ");
-  Serial.println(sensorValue); 
-  delay(500);
-  setupTdsSensor(TDS_PIN); 
+  connectToWiFi();
+  int sensorValue = analogRead(34);
+  Notification();
+
+
+  // setupTdsSensor(TDS_PIN); 
   pinMode(RELAY_NUTRISI, OUTPUT);
   pinMode(RELAY_PHUP, OUTPUT);
   pinMode(RELAY_PHDOWN, OUTPUT);
@@ -57,9 +55,8 @@ void setup()
   digitalWrite(RELAY_MIXER, HIGH);
   digitalWrite(RELAY_WATER, HIGH);
 
-  connectToWiFi();
   delay(1000);
-  setupTdsSensor(TDS_SENSOR_PIN, waterTemp); 
+  setupTdsSensor(TDS_SENSOR_PIN); 
   // startPump(RELAY_WATER);
   // startPump(RELAY_NUTRISI);
 
@@ -69,11 +66,11 @@ void loop()
 {
 CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
 if(calibrationTds.status == true){
-  setupTdsSensor(TDS_SENSOR_PIN, waterTemp); 
+  setupTdsSensor(TDS_SENSOR_PIN); 
 }
 
 //ph
-loopTdsSensor(TEMPERATURE);
+// loopTdsSensor(TEMPERATURE);
 float tdsValue = readTdsValue();
 Serial.print("[DR.ROBOT] TDS Value: ");
 Serial.print(tdsValue);

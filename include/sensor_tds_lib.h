@@ -6,7 +6,7 @@
 #include "calibration_tds_model.h"
 
 // Deklarasi fungsi dan variabel untuk sensor TDS
-void setupTdsSensor(uint8_t pin, float temperature);
+void setupTdsSensor(uint8_t pin);
 CalibrationTdsModel readDataCalibrationTdsFromFirestore();
 float readTdsValue();
 void calibrateTdsSensor(float calibrationEC);

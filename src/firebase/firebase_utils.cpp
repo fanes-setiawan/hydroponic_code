@@ -280,9 +280,6 @@ CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
     StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, jsonString);
 
-    Serial.print("err: ");
-    Serial.println(error.c_str());
-
     if (!error) {
       // Pastikan "documents" ada dalam JSON
       if (doc.containsKey("documents")) {

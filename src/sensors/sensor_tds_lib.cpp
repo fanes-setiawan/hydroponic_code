@@ -1,74 +1,72 @@
 #include "sensor_tds_lib.h"
 #include "calibration_tds_model.h"
 #include "firebase_utils.h"
+#include "notification.h"
+#define CALIBRATION_FLAG_ADDR 0
 
 // Membuat objek sensor TDS dan variabel suhu air
-GravityTDS TdsSensor::tdsSensor;
+GravityTDS tdsSensor; // Tidak perlu TdsSensor::tdsSensor
 float calibrationValue = 0.0;
 bool calibrationStatus = false;
+Notification notification;
+float temperature = 25,
+      tdsValue = 0;
 
 // Fungsi untuk inisialisasi sensor TDS
-void setupTdsSensor(uint8_t pin, float temperature)
+void setupTdsSensor(uint8_t pin)
 {
     Serial.println("[DR.ROBOT] Setup TDS Sensor");
-    TdsSensor::tdsSensor.setPin(pin);
-    TdsSensor::tdsSensor.setAref(3.3);
-    TdsSensor::tdsSensor.setAdcRange(4096);
-    TdsSensor::tdsSensor.setTemperature(temperature);
-    TdsSensor::tdsSensor.begin();
+    EEPROM.begin(512); 
+    tdsSensor.setPin(pin);
+    tdsSensor.setAref(3.3);
+    tdsSensor.setAdcRange(4096);
+    tdsSensor.begin();
 
     // Membaca data kalibrasi dari Firestore
     CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
-
-    Serial.print("Calibration status from Firestore: ");
-    Serial.println(calibrationTds.status);
-
     if (calibrationTds.status)
     {
+        Serial.println("MULAI KALIBRASI");
+         EEPROM.write(CALIBRATION_FLAG_ADDR, 1);
         calibrationValue = calibrationTds.fluid_ppm;
-        Serial.println("Memulai kalibrasi menggunakan data Firestore...");
         calibrateTdsSensor(calibrationValue);
         calibrationStatus = true;
-        delay(500);
         patchDataCalibrationTdsToFirestore("status", "false");
+        delay(1000);
     }
     else
     {
-        Serial.println("Data kalibrasi tidak ditemukan. Sensor berjalan tanpa kalibrasi.");
+        notification.sendNotification("Kalibrasi TDS", "Lakukan Kalibrasi TDS...");
     }
 }
 
 // Fungsi untuk mengkalibrasi sensor TDS
 void calibrateTdsSensor(float calibrationEC)
 {
-    Serial.println("[INFO] Memulai kalibrasi..." + String(calibrationEC));
-    TdsSensor::tdsSensor.setKValue(calibrationEC); // Set kalibrasi EC (dalam ppm)
-
-    if (calibrationEC > 0)
+    if (EEPROM.read(CALIBRATION_FLAG_ADDR) == 1)
     {
-        Serial.print("[INFO] Menggunakan larutan dengan nilai EC: ");
-        Serial.println(calibrationEC);
-        TdsSensor::tdsSensor.ecCalibration(1);
+        Serial.println("Masuk ke mode kalibrasi");
+        tdsSensor.ecCalibration(1); // Masuk ke mode kalibrasi
 
-        delay(2000);
-        TdsSensor::tdsSensor.ecCalibration(2);
-        Serial.print("[INFO] Kalibrasi:::.");
-    
-        TdsSensor::tdsSensor.ecCalibration(3); // Simpan kalibrasi dan keluar
-        Serial.println("[INFO] Kalibrasi berhasil dan disimpan.");
-    }
-    else
-    {
-        Serial.println("[ERROR] Nilai EC tidak valid untuk kalibrasi.");
+        // Simulasikan pengiriman data kalibrasi
+        char buffer[20];
+        sprintf(buffer, "CAL:%f", calibrationEC);
+        strcpy(tdsSensor.cmdReceivedBuffer, buffer);
+        tdsSensor.ecCalibration(2);
+
+        tdsSensor.ecCalibration(3);
+
+        EEPROM.write(CALIBRATION_FLAG_ADDR, 0);
+        EEPROM.commit();
+        Serial.println("Kalibrasi selesai dan disimpan ke EEPROM");
     }
 }
 
 // Fungsi untuk membaca nilai TDS
 float readTdsValue()
 {
-    TdsSensor::tdsSensor.update();
-    float tdsValue = TdsSensor::tdsSensor.getTdsValue();
-    Serial.print("Nilai TDS: ");
-    Serial.println(tdsValue);
+    tdsSensor.setTemperature(temperature); // set the temperature and execute temperature compensation
+    tdsSensor.update();                    // sample and calculate
+    tdsValue = tdsSensor.getTdsValue();    // then get the value
     return tdsValue;
 }

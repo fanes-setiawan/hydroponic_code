@@ -2,14 +2,14 @@
 #define CREDENTIALS_H
 
 // WiFi credentials
-#define WIFI_SSID "Tselhome-0A06"
-#define WIFI_PASSWORD "44226533"
+// #define WIFI_SSID "Tselhome-0A06"
+// #define WIFI_PASSWORD "44226533"
 
 // #define WIFI_SSID "Carakan-Developer"
 // #define WIFI_PASSWORD "2wsx1qaz"
 
-// #define WIFI_SSID "KONTRAKKAN 01"
-// #define WIFI_PASSWORD "KEPOAMAT"
+#define WIFI_SSID "KONTRAKKAN 01"
+#define WIFI_PASSWORD "KEPOAMAT"
 
 
 // Firebase credentials
@@ -39,6 +39,11 @@
 //calibration
 #define FIREBASE_CALIBRATION_COLLECTION "calibration"
 #define ID_TDS_CALIBRATION "tds_sensor_admin"
+
+//notification
+#define API_NOTIF "https://notifikasi-api.vercel.app/api/v1/notifications/send-notification"
+
+
 
 
 
