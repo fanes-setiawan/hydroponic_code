@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "controller.h"
 
-#define FLOW_RATE 1750.0    
-#define DESIRED_VOLUME 200.0
+#define FLOW_RATE 1250.0    
+#define DESIRED_VOLUME 80.0
 
 bool pumpRunning = false;
 unsigned long pumpStartTime = 0;

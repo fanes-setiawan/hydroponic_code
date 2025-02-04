@@ -10,6 +10,8 @@ void setupTdsSensor(uint8_t pin);
 CalibrationTdsModel readDataCalibrationTdsFromFirestore();
 float readTdsValue();
 void calibrateTdsSensor(float calibrationEC);
+float readFilteredTdsValue();
+float getMedianValue(float data[], int len);
 
 // Namespace opsional untuk menghindari konflik
 namespace TdsSensor {

@@ -57,7 +57,7 @@ void setup()
 
   delay(1000);
   setupTdsSensor(TDS_SENSOR_PIN); 
-  // startPump(RELAY_WATER);
+  startPump(RELAY_WATER);
   // startPump(RELAY_NUTRISI);
 
 }
@@ -65,16 +65,24 @@ void setup()
 void loop()
 {
 CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
+Serial.print("[DR.ROBOT]  Status: ");
+Serial.println(calibrationTds.status);
 if(calibrationTds.status == true){
+Serial.println("[DR.ROBOT] Kalibrasi TDS: ");
   setupTdsSensor(TDS_SENSOR_PIN); 
 }
 
 //ph
 // loopTdsSensor(TEMPERATURE);
 float tdsValue = readTdsValue();
+float tdsValueFiltered = readFilteredTdsValue();
 Serial.print("[DR.ROBOT] TDS Value: ");
 Serial.print(tdsValue);
 Serial.println(" ppm");
+Serial.print("[DR.ROBOT] TDS Value Filtered: ");
+Serial.print(tdsValueFiltered);
+Serial.println(" ppm");
+delay(1000);
 
 //............
   // Serial.println("looping");

@@ -271,17 +271,23 @@ ScheduleModel readDataScheduleFromFirestore()
 
   return scheduleModel;
 }
-
 CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
   CalibrationTdsModel calibrationTdsModel;
-
+  Serial.println("Getting data calibration from Firestore...");
+  
   if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_CALIBRATION_COLLECTION)) {
     String jsonString = firebaseData.payload();
     StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, jsonString);
 
+    Serial.print("JSON: ");
+    serializeJson(doc, Serial);
+    Serial.println();
+
+    Serial.print("STATUS ERROR: ");
+    Serial.println(error.c_str());
+    
     if (!error) {
-      // Pastikan "documents" ada dalam JSON
       if (doc.containsKey("documents")) {
         JsonArray documents = doc["documents"].as<JsonArray>();
 
@@ -297,19 +303,21 @@ CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
             serializeJson(fields, Serial);
             Serial.println();
 
-            // Ambil nilai dari fields
-            if (fields.containsKey(" fluid_ppm")) {
-              // Tangani tipe integerValue atau doubleValue
-              if (fields[" fluid_ppm"].containsKey("integerValue")) {
-                calibrationTdsModel.fluid_ppm = fields[" fluid_ppm"]["integerValue"].as<float>();
-              } else if (fields[" fluid_ppm"].containsKey("doubleValue")) {
-                calibrationTdsModel.fluid_ppm = fields[" fluid_ppm"]["doubleValue"];
+            // Perbaikan: Hilangkan spasi di awal nama key fluid_ppm
+            if (fields.containsKey("fluid_ppm")) {
+              if (fields["fluid_ppm"].containsKey("integerValue")) {
+                calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["integerValue"].as<float>();
+              } else if (fields["fluid_ppm"].containsKey("doubleValue")) {
+                calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["doubleValue"];
               }
             }
 
+            // Tangani status yang berupa booleanValue atau integerValue
             if (fields.containsKey("status")) {
               if (fields["status"].containsKey("booleanValue")) {
-                calibrationTdsModel.status = fields["status"]["booleanValue"];
+                calibrationTdsModel.status = fields["status"]["booleanValue"].as<bool>();
+              } else if (fields["status"].containsKey("integerValue")) {
+                calibrationTdsModel.status = (fields["status"]["integerValue"].as<int>() != 0);
               }
             }
 
@@ -342,6 +350,7 @@ CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
 
   return calibrationTdsModel;
 }
+
 
 //patch status
 void patchDataCalibrationTdsToFirestore(const String &field, const String &value)
