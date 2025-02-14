@@ -39,6 +39,7 @@
 //calibration
 #define FIREBASE_CALIBRATION_COLLECTION "calibration"
 #define ID_TDS_CALIBRATION "tds_sensor_admin"
+#define ID_PH_CALIBRATION "ph_sensor_admin"
 
 //notification
 #define API_NOTIF "https://notifikasi-api.vercel.app/api/v1/notifications/send-notification"

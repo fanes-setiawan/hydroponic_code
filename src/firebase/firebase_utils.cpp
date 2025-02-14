@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include <Firebase_ESP_Client.h>
 #include "calibration_tds_model.h"
+#include "calibration_ph_model.h"
 
 // Inisialisasi variabel Firebase
 FirebaseData firebaseData;
@@ -105,25 +106,6 @@ RemoteModel readDataRemoteFromFirestore()
         remoteModel.waterPump = fields["waterPump"]["booleanValue"];
         remoteModel.autoMode = fields["auto"]["booleanValue"];
         remoteModel.autoCheck = fields["autoCheck"]["integerValue"];
-
-        // Cetak data yang diambil
-        // Serial.println("Data Remote Model:");
-        // Serial.print("phUp: ");
-        // Serial.println(remoteModel.phUp);
-        // Serial.print("phDown: ");
-        // Serial.println(remoteModel.phDown);
-        // Serial.print("water: ");
-        // Serial.println(remoteModel.water);
-        // Serial.print("nutrisi: ");
-        // Serial.println(remoteModel.nutrisi);
-        // Serial.print("mixer: ");
-        // Serial.println(remoteModel.mixer);
-        // Serial.print("waterPump: ");
-        // Serial.println(remoteModel.waterPump);
-        // Serial.print("autoMode: ");
-        // Serial.println(remoteModel.autoMode);
-        // Serial.print("autoCheck: ");
-        // Serial.println(remoteModel.autoCheck);
       }
     }
     else
@@ -141,7 +123,7 @@ RemoteModel readDataRemoteFromFirestore()
   return remoteModel;
 }
 
-//patch data remote to firebase
+// patch data remote to firebase
 void patchDataRemoteToFirestore(const String &field, const String &value)
 {
   FirebaseJson json;
@@ -169,7 +151,7 @@ void patchDataRemoteToFirestore(const String &field, const String &value)
   Serial.println(json.raw());
 
   // Nama koleksi dan dokumen
-  const String documentPath = FIREBASE_REMOTE_COLLECTION + String("/") +  DOCUMENT_ID;
+  const String documentPath = FIREBASE_REMOTE_COLLECTION + String("/") + DOCUMENT_ID;
 
   // Mengirim data ke Firestore
   if (Firebase.Firestore.patchDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath, json.raw(), field))
@@ -183,7 +165,6 @@ void patchDataRemoteToFirestore(const String &field, const String &value)
     Serial.println(firebaseData.errorReason());
   }
 }
-
 
 ScheduleModel readDataScheduleFromFirestore()
 {
@@ -271,11 +252,17 @@ ScheduleModel readDataScheduleFromFirestore()
 
   return scheduleModel;
 }
-CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
+
+CalibrationTdsModel readDataCalibrationTdsFromFirestore()
+{
   CalibrationTdsModel calibrationTdsModel;
-  Serial.println("Getting data calibration from Firestore...");
-  
-  if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_CALIBRATION_COLLECTION)) {
+  Serial.println("Getting TDS calibration data from Firestore...");
+
+  // Ubah path agar langsung ke "calibration/tds_sensor_admin"
+  String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") + ID_TDS_CALIBRATION;
+
+  if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath))
+  {
     String jsonString = firebaseData.payload();
     StaticJsonDocument<4096> doc;
     DeserializationError error = deserializeJson(doc, jsonString);
@@ -286,64 +273,68 @@ CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
 
     Serial.print("STATUS ERROR: ");
     Serial.println(error.c_str());
-    
-    if (!error) {
-      if (doc.containsKey("documents")) {
-        JsonArray documents = doc["documents"].as<JsonArray>();
 
-        Serial.print("documents: ");
-        Serial.println(documents.size());
+    if (!error)
+    {
+      if (doc.containsKey("fields"))
+      {
+        JsonObject fields = doc["fields"];
 
-        // Iterasi melalui dokumen di array
-        for (JsonObject document : documents) {
-          if (document.containsKey("fields")) {
-            JsonObject fields = document["fields"];
+        Serial.print("document[fields]: ");
+        serializeJson(fields, Serial);
+        Serial.println();
 
-            Serial.print("document[fields]: ");
-            serializeJson(fields, Serial);
-            Serial.println();
-
-            // Perbaikan: Hilangkan spasi di awal nama key fluid_ppm
-            if (fields.containsKey("fluid_ppm")) {
-              if (fields["fluid_ppm"].containsKey("integerValue")) {
-                calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["integerValue"].as<float>();
-              } else if (fields["fluid_ppm"].containsKey("doubleValue")) {
-                calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["doubleValue"];
-              }
-            }
-
-            // Tangani status yang berupa booleanValue atau integerValue
-            if (fields.containsKey("status")) {
-              if (fields["status"].containsKey("booleanValue")) {
-                calibrationTdsModel.status = fields["status"]["booleanValue"].as<bool>();
-              } else if (fields["status"].containsKey("integerValue")) {
-                calibrationTdsModel.status = (fields["status"]["integerValue"].as<int>() != 0);
-              }
-            }
-
-            if (fields.containsKey("updatedAt")) {
-              if (fields["updatedAt"].containsKey("timestampValue")) {
-                calibrationTdsModel.updateAt = fields["updatedAt"]["timestampValue"].as<String>();
-              }
-            }
-
-            // Cetak data yang diambil
-            Serial.print("fluid_ppm: ");
-            Serial.println(calibrationTdsModel.fluid_ppm);
-            Serial.print("status: ");
-            Serial.println(calibrationTdsModel.status);
-            Serial.print("updateAt: ");
-            Serial.println(calibrationTdsModel.updateAt);
+        // Ambil nilai TDS dari Firestore
+        if (fields.containsKey("fluid_ppm"))
+        {
+          if (fields["fluid_ppm"].containsKey("integerValue"))
+          {
+            calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["integerValue"].as<float>();
+          }
+          else if (fields["fluid_ppm"].containsKey("doubleValue"))
+          {
+            calibrationTdsModel.fluid_ppm = fields["fluid_ppm"]["doubleValue"];
           }
         }
-      } else {
-        Serial.println("No 'documents' key found in JSON!");
+
+        // Ambil status kalibrasi dari Firestore
+        if (fields.containsKey("status"))
+        {
+          if (fields["status"].containsKey("booleanValue"))
+          {
+            calibrationTdsModel.status = fields["status"]["booleanValue"].as<bool>();
+          }
+        }
+
+        // Ambil waktu update dari Firestore
+        if (fields.containsKey("updatedAt"))
+        {
+          if (fields["updatedAt"].containsKey("timestampValue"))
+          {
+            calibrationTdsModel.updateAt = fields["updatedAt"]["timestampValue"].as<String>();
+          }
+        }
+
+        Serial.print("[TDS] Value: ");
+        Serial.println(calibrationTdsModel.fluid_ppm);
+        Serial.print("[TDS] Status: ");
+        Serial.println(calibrationTdsModel.status);
+        Serial.print("[TDS] Updated At: ");
+        Serial.println(calibrationTdsModel.updateAt);
       }
-    } else {
+      else
+      {
+        Serial.println("No 'fields' key found in JSON!");
+      }
+    }
+    else
+    {
       Serial.println("Failed to parse JSON!");
       Serial.println(error.c_str());
     }
-  } else {
+  }
+  else
+  {
     Serial.println("Failed to get document from Firestore!");
     Serial.println(firebaseData.errorReason());
   }
@@ -351,13 +342,12 @@ CalibrationTdsModel readDataCalibrationTdsFromFirestore() {
   return calibrationTdsModel;
 }
 
-
-//patch status
+// patch status
 void patchDataCalibrationTdsToFirestore(const String &field, const String &value)
 {
   FirebaseJson json;
 
-  // Deteksi tipe data dan set JSON
+  // Menentukan tipe data yang sesuai
   if (value.indexOf('.') != -1)
   {
     json.set("/fields/" + field + "/doubleValue", value.toFloat());
@@ -378,18 +368,146 @@ void patchDataCalibrationTdsToFirestore(const String &field, const String &value
   Serial.println("JSON Payload: ");
   Serial.println(json.raw());
 
-  const String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") +  ID_TDS_CALIBRATION;
+  // Ubah path agar langsung ke "calibration/tds_sensor_admin"
+  String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") + ID_TDS_CALIBRATION;
 
   if (Firebase.Firestore.patchDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath, json.raw(), field))
   {
-    Serial.println("Data sent successfully!");
+    Serial.println("[TDS] Data sent successfully!");
     Serial.println(firebaseData.payload());
   }
   else
   {
-    Serial.println("Failed to send data!");
+    Serial.println("[TDS] Failed to send data!");
     Serial.println(firebaseData.errorReason());
   }
 }
 
+CalibrationPhModel readDataCalibrationPhFromFirestore()
+{
+  CalibrationPhModel calibrationPhModel;
+  Serial.println("Getting pH calibration data from Firestore...");
 
+  // Ubah path agar langsung ke "calibration/ph_sensor_admin"
+  String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") + ID_PH_CALIBRATION;
+
+  if (Firebase.Firestore.getDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath))
+  {
+    String jsonString = firebaseData.payload();
+    StaticJsonDocument<4096> doc;
+    DeserializationError error = deserializeJson(doc, jsonString);
+
+    Serial.print("JSON: ");
+    serializeJson(doc, Serial);
+    Serial.println();
+
+    Serial.print("STATUS ERROR: ");
+    Serial.println(error.c_str());
+
+    if (!error)
+    {
+      if (doc.containsKey("fields"))
+      {
+        JsonObject fields = doc["fields"];
+
+        Serial.print("document[fields]: ");
+        serializeJson(fields, Serial);
+        Serial.println();
+
+        // Ambil nilai pH dari Firestore
+        if (fields.containsKey("ph_value"))
+        {
+          if (fields["ph_value"].containsKey("doubleValue"))
+          {
+            calibrationPhModel.fluid_ph = fields["ph_value"]["doubleValue"];
+          }
+          else if (fields["ph_value"].containsKey("integerValue"))
+          {
+            calibrationPhModel.fluid_ph = fields["ph_value"]["integerValue"].as<float>();
+          }
+        }
+
+        // Ambil status kalibrasi dari Firestore
+        if (fields.containsKey("status"))
+        {
+          if (fields["status"].containsKey("booleanValue"))
+          {
+            calibrationPhModel.status = fields["status"]["booleanValue"].as<bool>();
+          }
+        }
+
+        // Ambil waktu update dari Firestore
+        if (fields.containsKey("updatedAt"))
+        {
+          if (fields["updatedAt"].containsKey("timestampValue"))
+          {
+            calibrationPhModel.updateAt = fields["updatedAt"]["timestampValue"].as<String>();
+          }
+        }
+
+        Serial.print("[pH] Value: ");
+        Serial.println(calibrationPhModel.fluid_ph);
+        Serial.print("[pH] Status: ");
+        Serial.println(calibrationPhModel.status);
+        Serial.print("[pH] Updated At: ");
+        Serial.println(calibrationPhModel.updateAt);
+      }
+      else
+      {
+        Serial.println("No 'fields' key found in JSON!");
+      }
+    }
+    else
+    {
+      Serial.println("Failed to parse JSON!");
+      Serial.println(error.c_str());
+    }
+  }
+  else
+  {
+    Serial.println("Failed to get document from Firestore!");
+    Serial.println(firebaseData.errorReason());
+  }
+
+  return calibrationPhModel;
+}
+
+void patchDataCalibrationPhToFirestore(const String &field, const String &value)
+{
+  FirebaseJson json;
+
+  // Menentukan tipe data yang sesuai
+  if (value.indexOf('.') != -1)
+  {
+    json.set("/fields/" + field + "/doubleValue", value.toFloat());
+  }
+  else if (value == "true" || value == "false")
+  {
+    json.set("/fields/" + field + "/booleanValue", value == "true");
+  }
+  else if (value.toInt() != 0 || value == "0")
+  {
+    json.set("/fields/" + field + "/integerValue", value.toInt());
+  }
+  else
+  {
+    json.set("/fields/" + field + "/stringValue", value);
+  }
+
+  Serial.println("JSON Payload: ");
+  Serial.println(json.raw());
+
+  // Ubah path agar langsung ke "calibration/ph_sensor_admin"
+  String documentPath = FIREBASE_CALIBRATION_COLLECTION + String("/") + ID_PH_CALIBRATION;
+
+  if (Firebase.Firestore.patchDocument(&firebaseData, FIREBASE_PROJECT_ID, "", documentPath, json.raw(), field))
+  {
+    Serial.println("[pH] Data sent successfully!");
+    Serial.println(firebaseData.payload());
+  }
+  else
+  {
+    Serial.println("[pH] Failed to send data!");
+    Serial.println(firebaseData.errorReason());
+  }
+}
