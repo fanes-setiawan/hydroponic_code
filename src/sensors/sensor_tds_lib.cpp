@@ -35,10 +35,6 @@ void setupTdsSensor(uint8_t pin)
         patchDataCalibrationTdsToFirestore("status", "false");
         delay(1000);
     }
-    else
-    {
-        notification.sendNotification("Kalibrasi TDS", "Lakukan Kalibrasi TDS...");
-    }
 }
 
 // Fungsi untuk mengkalibrasi sensor TDS
@@ -47,17 +43,21 @@ void calibrateTdsSensor(float calibrationEC)
     if (EEPROM.read(CALIBRATION_FLAG_ADDR) == 1)
     {
         Serial.println("Masuk ke mode kalibrasi");
+        notification.sendNotification("Kalibrasi Sensor TDS", "Mulai Kalibrasi Sensor TDS");
         tdsSensor.ecCalibration(1);
         delay(500);
         char buffer[20];
         sprintf(buffer, "CAL:%f", calibrationEC);
         strcpy(tdsSensor.cmdReceivedBuffer, buffer);
         tdsSensor.ecCalibration(2);
-
+        
         tdsSensor.ecCalibration(3);
-
+        
         EEPROM.write(CALIBRATION_FLAG_ADDR, 0);
         EEPROM.commit();
+        notification.sendNotification("Kalibrasi Sensor TDS", "Selesai Kalibrasi Sensor TDS");
+        delay(1000);
+        
     }
 }
 

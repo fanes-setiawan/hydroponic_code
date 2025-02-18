@@ -30,8 +30,6 @@ String getTimestamp()
   {
     char localTimeString[50];
     strftime(localTimeString, sizeof(localTimeString), "%B %d, %Y at %I:%M:%S %p UTC+7", &timeinfo);
-    Serial.print("Local Time: ");
-    Serial.println(localTimeString);
   }
 
   struct tm *utcTime = gmtime(&now);
@@ -40,4 +38,21 @@ String getTimestamp()
   strftime(utcTimeString, sizeof(utcTimeString), "%Y-%m-%dT%H:%M:%SZ", utcTime);
 
   return String(utcTimeString);
+}
+
+String getTimeNow() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+      return "Time not set";
+  }
+
+  char buffer[30];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+  return String(buffer);
+}
+
+String formatScheduleTime(String rawTime) {
+  rawTime.replace("T", " ");
+  rawTime.replace("Z", ""); 
+  return rawTime.substring(0, 16);
 }

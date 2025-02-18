@@ -6,6 +6,8 @@
 
 // Deklarasi fungsi
 String getTimestamp();
+String getTimeNow();
+String formatScheduleTime(String rawTime);
 void setupTime();
 
 #endif

@@ -24,11 +24,13 @@
 //fields for the database
 
 //ph
-#define FIREBASE_PH_COLLECTION "EX-ph"
+// #define FIREBASE_PH_COLLECTION "EX-ph"
+#define FIREBASE_PH_COLLECTION "phData"
 #define FIREBASE_PH_VL_FIELD "fields/phLevel/integerValue"
 #define FIREBASE_PH_TM_FIELD "fields/createdAt/timestampValue"
 //tds
-#define FIREBASE_TDS_COLLECTION "EX-tds"
+// #define FIREBASE_TDS_COLLECTION "EX-tds"
+#define FIREBASE_TDS_COLLECTION "tdsData"
 #define FIREBASE_TDS_VL_FIELD "fields/tdsLevel/integerValue"
 #define FIREBASE_TDS_TM_FIELD "fields/createdAt/timestampValue"
 //remote

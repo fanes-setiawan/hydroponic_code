@@ -32,15 +32,10 @@ void connectToFirebase()
 void sendDataPhToFirestore(float phLevel)
 {
   FirebaseJson json;
-
-  // Menambahkan field ke JSON
   json.set(FIREBASE_PH_VL_FIELD, String((int)phLevel));
   json.set(FIREBASE_PH_TM_FIELD, getTimestamp());
-
-  // Menampilkan data JSON
   Serial.println(json.raw());
 
-  // Mengirim data ke Firestore
   if (Firebase.Firestore.createDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_PH_COLLECTION, json.raw()))
   {
     Serial.println("Data sent successfully!");
@@ -57,15 +52,11 @@ void sendDataPhToFirestore(float phLevel)
 void sendDataTdsToFirestore(float tdsLevel)
 {
   FirebaseJson json;
-
-  // Menambahkan field ke JSON
   json.set(FIREBASE_TDS_VL_FIELD, String((int)tdsLevel));
   json.set(FIREBASE_TDS_TM_FIELD, getTimestamp());
 
-  // Menampilkan data JSON
   Serial.println(json.raw());
 
-  // Mengirim data ke Firestore
   if (Firebase.Firestore.createDocument(&firebaseData, FIREBASE_PROJECT_ID, "", FIREBASE_TDS_COLLECTION, json.raw()))
   {
     Serial.println("Data sent successfully!");
@@ -186,7 +177,6 @@ ScheduleModel readDataScheduleFromFirestore()
   FirebaseJson timestampValue;
 
   field.set("fieldPath", "scheduled_time");
-
   timestampValue.set("timestampValue", timeNow);
 
   fieldFilter.set("field", field);
@@ -195,6 +185,10 @@ ScheduleModel readDataScheduleFromFirestore()
 
   whereCondition.set("fieldFilter", fieldFilter);
   structuredQuery.set("where", whereCondition);
+
+  FirebaseJson orderBy;
+  orderBy.set("field.fieldPath", "scheduled_time");
+  orderBy.set("direction", "ASCENDING");
   structuredQuery.set("limit", 1);
 
   String jsonString;

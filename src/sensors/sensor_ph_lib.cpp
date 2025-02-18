@@ -29,8 +29,6 @@ void setupPhSensor() {
         }
 
         patchDataCalibrationPhToFirestore("status", "false");
-    } else {
-        notificationPH.sendNotification("Kalibrasi pH", "Lakukan Kalibrasi pH...");
     }
 }
 
