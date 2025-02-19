@@ -11,23 +11,16 @@
 #include "time_utils.h"
 #include "sensor_main.h"
 #include "schedule_main.h"
-      
 
-#define RELAY_NUTRISI 2
-#define RELAY_PHUP 4
-#define RELAY_PHDOWN 16
-#define RELAY_WATERPUMP 17
-#define RELAY_MIXER 5
-#define RELAY_WATER 18
+#define RELAY_NUTRISI 18
+#define RELAY_PHUP 5
+#define RELAY_PHDOWN 2
+#define RELAY_WATERPUMP 4
+#define RELAY_MIXER 16
+#define RELAY_WATER 17
 
-/*
-Relay 1 : 18 - Nutrisi 
-Relay 2 : 5 - Ph Up
-Relay 3 : 2 - Ph Down
-Relay 4 : 4 - Water Pump
-Relay 5 : 16 - Mixer
-Relay 6 : 17 - Water
-*/
+#define TDS_SENSOR_PIN 35
+#define TXS_OE 22
 
 int pH_Value;
 float Voltage;
@@ -36,7 +29,6 @@ const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0;
 
 // sensor pin
-#define TDS_SENSOR_PIN 35
 float waterTemp = 25.0;
 
 Notification notifMain;
@@ -44,9 +36,6 @@ Notification notifMain;
 void setup()
 {
   Serial.begin(115200);
-  connectToWiFi();
-  int sensorValue = analogRead(34);
-  Notification();
 
   pinMode(RELAY_NUTRISI, OUTPUT);
   pinMode(RELAY_PHUP, OUTPUT);
@@ -54,7 +43,13 @@ void setup()
   pinMode(RELAY_WATERPUMP, OUTPUT);
   pinMode(RELAY_MIXER, OUTPUT);
   pinMode(RELAY_WATER, OUTPUT);
+  pinMode(TXS_OE, OUTPUT);
+  delay(1000);
+  digitalWrite(TXS_OE, HIGH);
 
+  connectToWiFi();
+  int sensorValue = analogRead(34);
+  Notification();
   digitalWrite(RELAY_NUTRISI, HIGH);
   digitalWrite(RELAY_PHUP, HIGH);
   digitalWrite(RELAY_PHDOWN, HIGH);
@@ -62,7 +57,6 @@ void setup()
   digitalWrite(RELAY_MIXER, HIGH);
   digitalWrite(RELAY_WATER, HIGH);
 
-  delay(1000);
   setupTdsSensor(TDS_SENSOR_PIN);
   setupPhSensor();
   setupTime();
@@ -71,15 +65,11 @@ void setup()
 
 void loop()
 {
-
-  // lisner
   CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
   CalibrationPhModel calibrationPh = readDataCalibrationPhFromFirestore();
   RemoteModel remote = readDataRemoteFromFirestore();
 
-  // checking schedule
   checkingSchedule();
-
 
   if (remote.autoMode == true)
   {
@@ -89,7 +79,6 @@ void loop()
     checkingSensor(30);
     Serial.println("[DR.ROBOT] Auto Mode: OFF");
     }
-
 
   if (calibrationTds.status == true)
   {
@@ -101,7 +90,6 @@ void loop()
     Serial.println("[DR.ROBOT] Kalibrasi pH: ");
     setupPhSensor();
   }
-  delay(1000);
 
   // read sensor
   float tdsValueFiltered = readFilteredTdsValue();
@@ -115,25 +103,18 @@ void loop()
   Serial.println(" pH");
 
   // RemoteModel remote =  readDataRemoteFromFirestore();
-  if (remote.waterPump == true && !pumpRunning)
-  {
-    pumpRunning = true;
-    startWaterPump(RELAY_WATERPUMP);
+  // digitalWrite(RELAY_WATERPUMP, remote.waterPump ? LOW : HIGH);
+  digitalWrite(RELAY_MIXER, remote.mixer ? LOW : HIGH);
+  if(remote.waterPump == true){
+    startPump(RELAY_WATERPUMP,100);
   }
-  else if (remote.waterPump == false && pumpRunning)
-  {
-    pumpRunning = false;
-    stopWaterPump(RELAY_WATERPUMP);
-  }
-  else
-  {
-  }
+
+
   delay(1000);
 
-  if (remote.phDown != 0)
-  {
-    Serial.print("Data pH DOWN AKAN DI RESTART");
-    patchDataRemoteToFirestore("phDown", "0.0");
-  }
- 
+  // if (remote.phDown != 0)
+  // {
+  //   Serial.print("Data pH DOWN AKAN DI RESTART");
+  //   patchDataRemoteToFirestore("phDown", "0.0");
+  // }
 }

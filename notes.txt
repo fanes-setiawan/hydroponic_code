@@ -1,0 +1,11 @@
+Relay 1-6
+
+/*
+Relay 1 : 18 - Nutrisi 
+Relay 2 : 5 - Ph Up
+Relay 3 : 2 - Ph Down
+Relay 4 : 4 - Water Pump
+Relay 5 : 16 - Mixer
+Relay 6 : 17 - Water
+*/
+
