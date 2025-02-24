@@ -34,12 +34,20 @@ void checkingSensor(int intervalMinutes)
         String timeNow = getTimeNow();
         float tdsValue = readFilteredTdsValue();
         float phValue = readFilteredPhValue();
-        if (phValue <= 14.0 && isErrorSensorPH == false)
+        if ((double)phValue <= 14.0 && isErrorSensorPH == false)
         {
+            Serial.print("[SENSOR][PH] -> ::");
+            Serial.print(phValue);
             sendDataPhToFirestore(phValue);
             isErrorSensorPH = false;
+            //optimal 6.0-7.0
+            if(phValue <= 6.0){
+                notifSensor.sendNotification("Sensor pH :" , "Nilai pH Dibawah Nilai Optimal 6.0-7.0");
+            }else if(phValue >= 7.0){
+                notifSensor.sendNotification("Sensor pH : " , "Nilai pH Diatas Nilai Optimal 6.0-7.0");
+            }
         }
-        else if (phValue > 14.0 && isErrorSensorPH == false)
+        else if ((double)phValue > 14.0 && isErrorSensorPH == false)
         {
             notifSensor.sendNotification("❌ Sensor pH", "Kalibrasi Ulang Diperlukan");
             isErrorSensorPH = true;

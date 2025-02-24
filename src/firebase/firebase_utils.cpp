@@ -32,7 +32,9 @@ void connectToFirebase()
 void sendDataPhToFirestore(float phLevel)
 {
   FirebaseJson json;
-  json.set(FIREBASE_PH_VL_FIELD, String((int)phLevel));
+  phLevel = round(phLevel * 100) / 100.0;
+
+  json.set(FIREBASE_PH_VL_FIELD, phLevel);
   json.set(FIREBASE_PH_TM_FIELD, getTimestamp());
   Serial.println(json.raw());
 

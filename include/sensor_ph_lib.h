@@ -6,19 +6,15 @@
 #include "calibration_ph_model.h"
 #include "notification.h"
 
-void setupPhSensor();
-CalibrationPhModel readDataCalibrationPhFromFirestore();
-float readPhValue();
-void calibratePhSensor(float calibrationValue, const char* typ);
-float readFilteredPhValue();
-float getMedianValues(float data[], int len);
-extern Notification notification;
+#define CALIBRATION_FLAG_ADDR 0
+#define CALIBRATION_VALUE_ADDR sizeof(int)
+#define PH_PIN 34  // Pin ADC untuk sensor pH
 
-// Namespace opsional untuk menghindari konflik
-namespace PhSensors{
-    extern DFRobot_PH phSensor;
-    extern float waterTemperature;
-    
-}
+void setupPhSensor();
+void calibratePhSensor(float voltage, float calibrationValue, const char* type);
+float readFilteredPhValue();
+float readPhValue();
+float getMedianValues(float data[], int len);
+extern Notification notificationPH;
 
 #endif

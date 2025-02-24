@@ -2,71 +2,145 @@
 #include "calibration_ph_model.h"
 #include "firebase_utils.h"
 
-#define CALIBRATION_FLAG_ADDR 0
-#define CALIBRATION_VALUE_ADDR sizeof(int)  // Assuming int size is appropriate for EEPROM address calculation
-
-#define PH_PIN 34
-
 DFRobot_PH phSensor;
 Notification notificationPH;
-float temperaturePH = 25;  // Default calibration temperaturePH
+float temperaturePH = 25;
 float phValue = 0;
 
-void setupPhSensor() {
-    phSensor.begin();  // Initialize the pH sensor, no need to set pin explicitly
-    EEPROM.begin(512);  // Initialize EEPROM with size 512 bytes
+void setupPhSensor()
+{
+    Serial.println("🔹 Memulai Sensor pH...");
+    phSensor.begin();
+    EEPROM.begin(512);
 
     CalibrationPhModel calibratePh = readDataCalibrationPhFromFirestore();
-    if (calibratePh.status) {
-        EEPROM.write(CALIBRATION_FLAG_ADDR, 1);  // Set the calibration flag
-        EEPROM.put(CALIBRATION_VALUE_ADDR, calibratePh.fluid_ph);  // Store the pH value for calibration
-        EEPROM.commit();
+    if (calibratePh.status)
+    {
+        Serial.println("🔹 Data Kalibrasi Terdeteksi dari Firestore.");
 
-        if (calibratePh.fluid_ph == 4.01) {
-            calibratePhSensor(calibratePh.fluid_ph, "CALIBRATE LOW");
-        } else if (calibratePh.fluid_ph == 6.86) {
-            calibratePhSensor(calibratePh.fluid_ph, "CALIBRATE HIGH");
+        // Simpan status kalibrasi di EEPROM
+        EEPROM.write(CALIBRATION_FLAG_ADDR, 1);
+        EEPROM.put(CALIBRATION_VALUE_ADDR, calibratePh.fluid_ph);
+        EEPROM.commit();
+        delay(100);
+
+        // Baca tegangan sensor dari ADC
+        int adcValue = analogRead(PH_PIN);
+        float voltage = (adcValue / 4095.0) * 3.3;
+
+        Serial.print("🔹 Tegangan Sensor Saat Kalibrasi: ");
+        Serial.println(voltage, 3);
+        Serial.println(calibratePh.fluid_ph);
+
+        if (fabs(calibratePh.fluid_ph - 4.01) < 0.01)
+        {
+            Serial.println("[XXXXXX] Memulai kalibrasi pH 4.01...");
+            delay(4000);
+            calibratePhSensor(voltage, 4.01, "CALIBRATE pH4");
+        }
+        else if (fabs(calibratePh.fluid_ph == 6.86) < 0.01)
+        {
+            Serial.println("[XXXXXX] Memulai kalibrasi pH 6.86...");
+            calibratePhSensor(voltage, 6.86, "CALIBRATE pH7");
+        }
+        else if (calibratePh.fluid_ph == 9.18)
+        {
+            calibratePhSensor(voltage, 9.18, "CALIBRATE pH10");
+        }
+        else
+        {
+            Serial.println("⚠️ Error: Nilai pH tidak valid!");
+            return;
         }
 
-        patchDataCalibrationPhToFirestore("status", "false");
+        // Setelah kalibrasi selesai, baca ulang data dari EEPROM
+        Serial.println("🔹 Memuat ulang kalibrasi dari EEPROM...");
+        phSensor.begin();
     }
 }
 
-void calibratePhSensor(float calibrationValue, const char* type) {
-    if (EEPROM.read(CALIBRATION_FLAG_ADDR) == 1) {
-        Serial.print("Masuk ke mode kalibrasi untuk ");
+void calibratePhSensor(float voltage, float calibrationValue, const char *type)
+{
+    Serial.print("[🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹]");
+    delay(4000);
+
+    // 🛠 Debug EEPROM Flag
+    int flagValue = EEPROM.read(CALIBRATION_FLAG_ADDR);
+    Serial.print("📌 EEPROM Flag Status: ");
+    Serial.println(flagValue); // Cek apakah flag bernilai 1 atau tidak
+
+    if (flagValue == 1)
+    {
+        Serial.print("✅ EEPROM Flag = 1, masuk mode kalibrasi untuk ");
         Serial.println(type);
-
-        phSensor.calibration(calibrationValue, 25.0, type);  // Perform calibration based on type
-
-        EEPROM.write(CALIBRATION_FLAG_ADDR, 0); // Reset the calibration flag
-        EEPROM.commit();
     }
+    else
+    {
+        Serial.println("⚠️ EEPROM Flag ≠ 1, keluar dari mode kalibrasi.");
+        return; // Tidak masuk ke mode kalibrasi jika flag tidak 1
+    }
+
+    if (strcmp(type, "CALIBRATE pH4") == 0) {
+        EEPROM.put(PHVALUEADDR, voltage);
+    } else if (strcmp(type, "CALIBRATE pH7") == 0) {
+        EEPROM.put(PH7VALUEADDR, voltage);
+    } else {
+        Serial.println("⚠️ Error: Perintah kalibrasi tidak valid!");
+        return;
+    }
+
+    EEPROM.commit();
+    delay(100);
+
+    Serial.println("🔹 Menyimpan kalibrasi ke EEPROM...");
+
+    phSensor.calibration(voltage, calibrationValue, type);
+    Serial.println("✅✅✅ Kalibrasi Selesai ✅✅✅");
+
+    // Reset flag setelah selesai
+    EEPROM.write(CALIBRATION_FLAG_ADDR, 0);
+    EEPROM.commit();
+    
+    patchDataCalibrationPhToFirestore("status", "false");
 }
 
-float getMedianValues(float data[], int len) {
-    for(int i = 0; i < len-1; i++) {
-        for(int j = i+1; j < len; j++) {
-            if(data[i] > data[j]) {
+float getMedianValues(float data[], int len)
+{
+    for (int i = 0; i < len - 1; i++)
+    {
+        for (int j = i + 1; j < len; j++)
+        {
+            if (data[i] > data[j])
+            {
                 float temp = data[i];
                 data[i] = data[j];
                 data[j] = temp;
             }
         }
     }
-    return (len % 2 == 0) ? (data[len/2] + data[len/2 - 1]) / 2.0 : data[len/2];
+    return (len % 2 == 0) ? (data[len / 2] + data[len / 2 - 1]) / 2.0 : data[len / 2];
 }
 
-float readFilteredPhValue() {
-    float phValues[5];
-    for (int i = 0; i < 5; i++) {
+float readFilteredPhValue()
+{
+    float phValues[20];
+    for (int i = 0; i < 20; i++)
+    {
         phValues[i] = readPhValue();
-        delay(100);
+        delay(200);
     }
     return getMedianValues(phValues, 5);
 }
 
-float readPhValue() {
-    float voltage = analogRead(PH_PIN) / 4095.0 * 3300; // Read the analog voltage and convert it
-    return phSensor.readPH(voltage, temperaturePH);
+float readPhValue()
+{
+    int adcValue = analogRead(PH_PIN);
+    float voltage = (adcValue / 4095.0) * 3.3;
+
+    Serial.print("[PH][LIB] | ADC: ");
+    Serial.print(adcValue);
+    Serial.print(" [PH][LIB] | Tegangan: ");
+    Serial.println(voltage, 3);
+
+    return phSensor.readPH(voltage);
 }

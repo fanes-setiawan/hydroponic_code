@@ -26,7 +26,7 @@
 //ph
 // #define FIREBASE_PH_COLLECTION "EX-ph"
 #define FIREBASE_PH_COLLECTION "phData"
-#define FIREBASE_PH_VL_FIELD "fields/phLevel/integerValue"
+#define FIREBASE_PH_VL_FIELD "fields/phLevel/doubleValue"
 #define FIREBASE_PH_TM_FIELD "fields/createdAt/timestampValue"
 //tds
 // #define FIREBASE_TDS_COLLECTION "EX-tds"

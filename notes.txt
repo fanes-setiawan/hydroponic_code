@@ -9,3 +9,14 @@ Relay 5 : 16 - Mixer
 Relay 6 : 17 - Water
 */
 
+//notification
+{
+    "token": "-",
+    "title": "Sensor pH",
+    "body": "Nilai pH6.5 ,dibawah nilai minimum untuk tanaman selada"
+}
+{
+    "token": "-",
+    "title": "Sensor pH",
+    "body": "✅ Nilai pH6.5 , penyesuaian pH berhasil"
+}
