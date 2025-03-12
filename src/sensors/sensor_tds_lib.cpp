@@ -4,8 +4,7 @@
 #include "notification.h"
 #define CALIBRATION_FLAG_ADDR 0
 
-// Membuat objek sensor TDS dan variabel suhu air
-GravityTDS tdsSensor; // Tidak perlu TdsSensor::tdsSensor
+GravityTDS tdsSensor;
 float calibrationValue = 0.0;
 bool calibrationStatus = false;
 Notification notification;
@@ -13,7 +12,6 @@ float lastTdsOutput = -1;
 float temperature = 25,
       tdsValue = 0;
 
-// Fungsi untuk inisialisasi sensor TDS
 void setupTdsSensor(uint8_t pin)
 {
     Serial.println("[DR.ROBOT] Setup TDS Sensor");
@@ -23,7 +21,6 @@ void setupTdsSensor(uint8_t pin)
     tdsSensor.setAdcRange(4096);
     tdsSensor.begin();
 
-    // Membaca data kalibrasi dari Firestore
     CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
     if (calibrationTds.status)
     {
@@ -37,7 +34,6 @@ void setupTdsSensor(uint8_t pin)
     }
 }
 
-// Fungsi untuk mengkalibrasi sensor TDS
 void calibrateTdsSensor(float calibrationEC)
 {
     if (EEPROM.read(CALIBRATION_FLAG_ADDR) == 1)
@@ -50,14 +46,13 @@ void calibrateTdsSensor(float calibrationEC)
         sprintf(buffer, "CAL:%f", calibrationEC);
         strcpy(tdsSensor.cmdReceivedBuffer, buffer);
         tdsSensor.ecCalibration(2);
-        
+
         tdsSensor.ecCalibration(3);
-        
+
         EEPROM.write(CALIBRATION_FLAG_ADDR, 0);
         EEPROM.commit();
         notification.sendNotification("Kalibrasi Sensor TDS", "Selesai Kalibrasi Sensor TDS");
         delay(1000);
-        
     }
 }
 
@@ -114,11 +109,11 @@ float readFilteredTdsValue()
     {
         lastTdsOutput = medianTds;
     }
-
+    Serial.print("[FILTER][TDS] -> ");
+    Serial.println(lastTdsOutput);
     return lastTdsOutput;
 }
 
-// Fungsi untuk membaca nilai TDS
 float readTdsValue()
 {
     tdsSensor.setTemperature(temperature);

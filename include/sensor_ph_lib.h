@@ -10,6 +10,8 @@
 #define CALIBRATION_VALUE_ADDR sizeof(int)
 #define PH_PIN 34  // Pin ADC untuk sensor pH
 
+extern DFRobot_PH phSensor;
+
 void setupPhSensor();
 void calibratePhSensor(float voltage, float calibrationValue, const char* type);
 float readFilteredPhValue();

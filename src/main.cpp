@@ -11,16 +11,11 @@
 #include "time_utils.h"
 #include "sensor_main.h"
 #include "schedule_main.h"
-
-#define RELAY_NUTRISI 18
-#define RELAY_PHUP 2
-#define RELAY_PHDOWN 5
-#define RELAY_WATERPUMP 17
-#define RELAY_MIXER 16
-#define RELAY_WATER 4
-
-#define TDS_SENSOR_PIN 35
-#define TXS_OE 22
+#include "pins.h"
+#include "documentation.h"
+#include "controller_mixer.h"
+#include "sensor_main.h"
+#include "generate.h"
 
 int pH_Value;
 float Voltage;
@@ -51,7 +46,6 @@ void setup()
   digitalWrite(RELAY_MIXER, HIGH);
   digitalWrite(RELAY_WATER, HIGH);
   digitalWrite(TXS_OE, HIGH);
-  
 
   connectToWiFi();
   int sensorValue = analogRead(34);
@@ -75,10 +69,12 @@ void loop()
   {
     checkingSensor(remote.autoCheck);
     Serial.println("[DR.ROBOT] Auto Mode: ON");
-  }else{
+  }
+  else
+  {
     checkingSensor(30);
     Serial.println("[DR.ROBOT] Auto Mode: OFF");
-    }
+  }
 
   if (calibrationTds.status == true)
   {
@@ -91,31 +87,67 @@ void loop()
     delay(1000);
     setupPhSensor();
   }
-
-  // // read sensor
-  // float tdsValueFiltered = readFilteredTdsValue();
-  // Serial.print("Nutrisi: ");
-  // Serial.print(tdsValueFiltered);
-  // Serial.println(" ppm");
-
-  if(remote.autoMode){
-    float phValue = readFilteredPhValue();
-    Serial.print("------------>pH: ");
-    Serial.print(phValue);
-    Serial.println(" pH");
+  if (remote.isRemove == true)
+  {
+    Serial.println("[DR.ROBOT] Remove: ");
+    delay(1000);
+    phSensor.resetEEPROM();
+    patchDataRemoteToFirestore("isRemove", "false");
   }
-  
 
-  // // RemoteModel remote =  readDataRemoteFromFirestore();
-  // // digitalWrite(RELAY_WATERPUMP, remote.waterPump ? LOW : HIGH);
-  // digitalWrite(RELAY_MIXER, remote.mixer ? LOW : HIGH);
-  // if(remote.waterPump == true){
-  //   startPump(RELAY_WATER,100);
-  // }
-  // if(remote.mixer == true){
-  //   startPump(RELAY_NUTRISI,100);
-  // }
+  Serial.println("========================");
+  Serial.print("Remote Water: ");
+  Serial.println(remote.water);
+  Serial.print("Remote pH Up: ");
+  Serial.println(remote.phUp);
+  Serial.print("Remote pH Down: ");
+  Serial.println(remote.phDown);
+  Serial.print("Remote Nutrisi: ");
+  Serial.println(remote.nutrisi);
+  Serial.println("========================");
 
+  // larutan manual
+  if ((double)remote.water != 0.0)
+  {
+    startPump(RELAY_WATER, remote.water);
+    patchDataRemoteToFirestore("water", "0.0");
+    tdsLevel = calculateTDSLevel(tdsLevel , DOWN);
+    Serial.print("[MAIN][DOWN]TDS Level: ");
+    Serial.println(tdsLevel);
+  }
+  if ((double)remote.phDown != 0.0)
+  {
+    startPump(RELAY_PHDOWN, remote.phDown);
+    patchDataRemoteToFirestore("phDown", "0.0");
+  }
+  if ((double)remote.phUp != 0.0)
+  {
+    startPump(RELAY_PHUP, remote.phUp);
+    patchDataRemoteToFirestore("phUp", "0.0");
+  }
+  if ((double)remote.nutrisi != 0.0)
+  {
+    startPump(RELAY_NUTRISI, remote.nutrisi);
+    patchDataRemoteToFirestore("nutrisi", "0.0");
+    tdsLevel = calculateTDSLevel(tdsLevel , UP);
+    Serial.print("[MAIN][UP]TDS Level: ");
+    Serial.println(tdsLevel);
+  }
+  if (remote.waterPump == true)
+  {
+    startPump(RELAY_NUTRISI, 100);
+  }
+  if(remote.mixer == true){
+    startPump(RELAY_WATER, 100);
+  }
+  // if (remote.mixer == true)
+  // {
+  //   runMixer();
+  // }
+  // else
+  // {
+  //   stopMixer();
+  // }
 
   // delay(1000);
 

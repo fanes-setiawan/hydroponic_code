@@ -7,11 +7,15 @@
 #include "time_utils.h"
 #include "notification.h"
 #include "firebase_utils.h"
+#include "automation.h"
+#include "generate.h"
 
 
 void checkingSensor(int intervalMinutes);
 void saveTimeToEEPROM(unsigned long time);
 unsigned long readTimeFromEEPROM();
 String getTimestamp(); 
+
+extern float tdsLevel;
 
 #endif 

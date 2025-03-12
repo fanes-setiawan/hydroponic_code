@@ -46,7 +46,8 @@
 //notification
 #define API_NOTIF "https://notifikasi-api.vercel.app/api/v1/notifications/send-notification"
 
-
+//gSheet api
+#define GSHEETS "https://script.google.com/macros/s/AKfycbyCjwZG86-uKT_vbe48BEtoro7PCIka6I3fDLxIm4sIniwOolYZTkv5nI3RZ1ca_E7g/exec"
 
 
 

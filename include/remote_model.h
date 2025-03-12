@@ -13,6 +13,7 @@ public:
     bool waterPump;
     bool autoMode;
     int autoCheck;
+    bool isRemove;
 
     // Constructor
     RemoteModel(
@@ -23,7 +24,8 @@ public:
         bool mixer,
         bool waterPump,
         bool autoMode,
-        int autoCheck
+        int autoCheck,
+        bool isRemove
     ) {
         this->phUp = phUp;
         this->phDown = phDown;
@@ -33,10 +35,11 @@ public:
         this->waterPump = waterPump;
         this->autoMode = autoMode;
         this->autoCheck = autoCheck;
+        this->isRemove = isRemove;
     }
 
     // Default constructor
-    RemoteModel() : RemoteModel(0.0, 0.0, 0.0, 0.0, false, false, false,1) {}
+    RemoteModel() : RemoteModel(0.0, 0.0, 0.0, 0.0, false, false, false,1 ,false) {}
 };
 
 

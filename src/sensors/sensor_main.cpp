@@ -3,6 +3,9 @@
 #include <EEPROM.h>
 
 bool isErrorSensorPH = false;
+bool isFirstReading = true;
+
+float tdsLevel = 0.0;
 
 void saveTimeToEEPROM(unsigned long time)
 {
@@ -34,17 +37,29 @@ void checkingSensor(int intervalMinutes)
         String timeNow = getTimeNow();
         float tdsValue = readFilteredTdsValue();
         float phValue = readFilteredPhValue();
-        if ((double)phValue <= 14.0 && isErrorSensorPH == false)
+        if (isFirstReading)
+        {
+            tdsLevel = tdsValue;
+            isFirstReading = false;
+        }
+        if ((double)phValue <= 14.0)
         {
             Serial.print("[SENSOR][PH] -> ::");
             Serial.print(phValue);
             sendDataPhToFirestore(phValue);
             isErrorSensorPH = false;
-            //optimal 6.0-7.0
-            if(phValue <= 6.0){
-                notifSensor.sendNotification("Sensor pH :" , "Nilai pH Dibawah Nilai Optimal 6.0-7.0");
-            }else if(phValue >= 7.0){
-                notifSensor.sendNotification("Sensor pH : " , "Nilai pH Diatas Nilai Optimal 6.0-7.0");
+            // optimal 6.0-7.0
+            if ((double)phValue <= 6.0)
+            {
+                notifSensor.sendNotification("Sensor pH :", "Nilai pH Dibawah Nilai Optimal 6.0-7.0");
+            }
+            else if ((double)phValue >= 7.0)
+            {
+                notifSensor.sendNotification("Sensor pH : ", "Nilai pH Diatas Nilai Optimal 6.0-7.0");
+            }
+            if ((double)phValue < 6.0 || (double)phValue > 7.0)
+            {
+                automationPH(phValue, tdsLevel);
             }
         }
         else if ((double)phValue > 14.0 && isErrorSensorPH == false)
@@ -53,13 +68,22 @@ void checkingSensor(int intervalMinutes)
             isErrorSensorPH = true;
         }
 
-        if (tdsValue >= 0)
+        if ((double)tdsValue >= 0.0)
         {
-
-            sendDataTdsToFirestore(tdsValue);
+            sendDataTdsToFirestore(tdsLevel);
+            if ((double)tdsLevel < 560.0 || (double)tdsLevel > 840.0)
+            {
+              tdsLevel =  normalizeTDS(tdsLevel);
+            }
         }
-
+        else if ((double)tdsValue == 0.0)
+        {
+            isFirstReading = true;
+            tdsLevel = tdsValue;
+            sendDataTdsToFirestore(tdsLevel);
+        }
         Serial.println("TDS Value: " + String(tdsValue));
+        Serial.println("Simulated TDS Level: " + String(tdsLevel));
         Serial.println("pH Value: " + String(phValue));
     }
 }

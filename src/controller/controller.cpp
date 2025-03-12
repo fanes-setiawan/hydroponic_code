@@ -21,4 +21,6 @@ void startPump(int relayPin , float volume) {
     digitalWrite(relayPin, LOW); 
     delay(pumpDuration);             
     digitalWrite(relayPin, HIGH);  
+    delay(1000);
+    runMixer10s();
 }

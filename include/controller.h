@@ -2,6 +2,7 @@
 #define CONTROLLER_H
 
 #include <Arduino.h>
+#include "controller_mixer.h"
 
 extern unsigned long pumpStartTime;
 extern unsigned long pumpDuration;

@@ -99,6 +99,8 @@ RemoteModel readDataRemoteFromFirestore()
         remoteModel.waterPump = fields["waterPump"]["booleanValue"];
         remoteModel.autoMode = fields["auto"]["booleanValue"];
         remoteModel.autoCheck = fields["autoCheck"]["integerValue"];
+        remoteModel.isRemove = fields["isRemove"]["booleanValue"];
+
       }
     }
     else

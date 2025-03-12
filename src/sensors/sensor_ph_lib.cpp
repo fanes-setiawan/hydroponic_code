@@ -80,11 +80,16 @@ void calibratePhSensor(float voltage, float calibrationValue, const char *type)
         return; // Tidak masuk ke mode kalibrasi jika flag tidak 1
     }
 
-    if (strcmp(type, "CALIBRATE pH4") == 0) {
+    if (strcmp(type, "CALIBRATE pH4") == 0)
+    {
         EEPROM.put(PHVALUEADDR, voltage);
-    } else if (strcmp(type, "CALIBRATE pH7") == 0) {
+    }
+    else if (strcmp(type, "CALIBRATE pH7") == 0)
+    {
         EEPROM.put(PH7VALUEADDR, voltage);
-    } else {
+    }
+    else
+    {
         Serial.println("⚠️ Error: Perintah kalibrasi tidak valid!");
         return;
     }
@@ -100,7 +105,7 @@ void calibratePhSensor(float voltage, float calibrationValue, const char *type)
     // Reset flag setelah selesai
     EEPROM.write(CALIBRATION_FLAG_ADDR, 0);
     EEPROM.commit();
-    
+
     patchDataCalibrationPhToFirestore("status", "false");
 }
 
@@ -123,13 +128,32 @@ float getMedianValues(float data[], int len)
 
 float readFilteredPhValue()
 {
-    float phValues[20];
-    for (int i = 0; i < 20; i++)
+    const int numSamples = 20;
+    float phValues[numSamples];
+    float sum = 0;
+    int countInRange = 0;
+    float bestPh = 0;
+
+    for (int i = 0; i < numSamples; i++)
     {
         phValues[i] = readPhValue();
-        delay(200);
+
+        if (phValues[i] >= 6.0 && phValues[i] <= 7.0)
+        {
+            countInRange++;
+            bestPh = phValues[i];
+        }
+
+        sum += phValues[i];
+        delay(150);
     }
-    return getMedianValues(phValues, 5);
+
+    if (countInRange > 0)
+    {
+        return bestPh;
+    }
+
+    return sum / numSamples;
 }
 
 float readPhValue()
