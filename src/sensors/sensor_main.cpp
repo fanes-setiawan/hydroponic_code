@@ -68,7 +68,7 @@ void checkingSensor(int intervalMinutes)
             isErrorSensorPH = true;
         }
 
-        if ((double)tdsValue >= 0.0)
+        if ((double)tdsValue > 0.0)
         {
             sendDataTdsToFirestore(tdsLevel);
             if ((double)tdsLevel < 560.0 || (double)tdsLevel > 840.0)
@@ -76,7 +76,7 @@ void checkingSensor(int intervalMinutes)
               tdsLevel =  normalizeTDS(tdsLevel);
             }
         }
-        else if ((double)tdsValue == 0.0)
+        else if ((double)tdsValue <= 0.0)
         {
             isFirstReading = true;
             tdsLevel = tdsValue;
