@@ -4,15 +4,17 @@ const float pHChangePerMlUp = 9.48;
 const float pHChangePerMlDown = -9.48;
 const float pHtarget = 6.5;
 const float tdsTarget = 700;
-const float volumeOfWater = 100; // ml
+const float volumeOfWater = 6000; // ml
 const float tdsMax = 840;
 const float tdsMin = 560;
 
 dataExcel dataEx;
+dataExcel oldStatusExcel;
 
 void automationPH(float phValue, float tdsValue)
 {
-    Serial.println("<===========>Automation===========>");
+    if((double)phValue >= 0.0){
+        Serial.println("<===========>Automation===========>");
     float phDifference = pHtarget - phValue;
     float mlToAdd = 0;
     Notification notifAuto;
@@ -39,23 +41,31 @@ void automationPH(float phValue, float tdsValue)
         startPump(RELAY_PHDOWN, abs(mlToAdd));
     }
     delay(500);
-    float tdsCheck = readFilteredTdsValue();
+    float tdsCheck = calculateTDSLevel(tdsValue, NORMAL);
+    ;
     float phCheck = readFilteredPhValue();
     dataEx.pH_check = phCheck;
     dataEx.ppm_check = tdsCheck;
-    if ((double)phCheck > 6.5 && (double)phCheck < 7.5)
+    if ((double)phCheck > 6.0 && (double)phCheck < 7.0 && (double)tdsCheck > 560 && (double)tdsCheck < 840)
     {
-        dataEx.status = "Berhasil";
+        dataEx.status = "BERHASIL";
     }
     else
     {
-        dataEx.status = "Gagal";
+        dataEx.status = "GAGAL";
     }
+    oldStatusExcel.status = dataEx.status;
     uploadData(dataEx);
+    dataEx.phDown = abs(0.0);
+    dataEx.phUp = abs(0.0);
+    dataEx.water = abs(0.0);
+    dataEx.nutrisi = abs(0.0);
     delay(2000);
+    }
 }
-float normalizeTDS(float currentTDS)
+float normalizeTDS(float phValue, float currentTDS)
 {
+   if((double)phValue >= 0.0){
     Notification notifSensor;
     Serial.println("<===========> TDS Normalization <===========>");
 
@@ -63,22 +73,48 @@ float normalizeTDS(float currentTDS)
     float adjustmentVolume = 0;
     float mlToAdd = 0;
 
+    dataEx.ppm = currentTDS;
+    dataEx.pH = phValue;
+
     if (tdsDifference > 0 && currentTDS < tdsMin)
     {
         //
         adjustmentVolume = calculateVolumeToAdd(currentTDS);
+        dataEx.nutrisi = abs(adjustmentVolume);
         startPump(RELAY_NUTRISI, adjustmentVolume);
     }
     else if (tdsDifference < 0 && currentTDS > tdsMax)
     {
 
         adjustmentVolume = calculateWaterFilter(currentTDS);
+        dataEx.water = abs(adjustmentVolume);
         startPump(RELAY_WATER, adjustmentVolume);
     }
+    delay(500);
+    float tdsCheck = calculateTDSLevel(currentTDS, NORMAL);
+    float phCheck = readFilteredPhValue();
+    dataEx.pH_check = phCheck;
+    dataEx.ppm_check = tdsCheck;
+    if ((double)tdsCheck > 560 && (double)tdsCheck < 840 && (double)phCheck > 6.0 && (double)phCheck < 7.0)
+    {
+        dataEx.status = "BERHASIL";
+    }
+    else
+    {
+        dataEx.status = "GAGAL";
+    }
+    oldStatusExcel.status = dataEx.status;
+    uploadData(dataEx);
+    dataEx.phDown = abs(0.0);
+    dataEx.phUp = abs(0.0);
+    dataEx.water = abs(0.0);
+    dataEx.nutrisi = abs(0.0);
+    delay(2000);
 
     currentTDS = calculateTDSLevel(currentTDS, NORMAL);
 
     return currentTDS;
+   }
 }
 
 float calculateVolumeToAdd(float currentPPM)
@@ -98,4 +134,14 @@ float calculateWaterFilter(float currentTDS)
     }
     float additionalWater = volumeOfWater * ((currentTDS - tdsTarget) / tdsTarget);
     return additionalWater;
+}
+
+void checkStatus()
+{
+    Serial.println("Check Status ::: -x-x-x-x-x-x-x-x-x");
+    Serial.println("Old Status : " + oldStatusExcel.status);
+    if (oldStatusExcel.status == "NORMAL")
+    {
+        dataEx.status = "STABIL";
+    }
 }

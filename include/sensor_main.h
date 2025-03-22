@@ -9,6 +9,7 @@
 #include "firebase_utils.h"
 #include "automation.h"
 #include "generate.h"
+#include "schedule_run.h"
 
 
 void checkingSensor(int intervalMinutes);

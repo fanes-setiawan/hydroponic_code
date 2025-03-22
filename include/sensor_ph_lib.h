@@ -16,6 +16,7 @@ void setupPhSensor();
 void calibratePhSensor(float voltage, float calibrationValue, const char* type);
 float readFilteredPhValue();
 float readPhValue();
+bool checkEEPROMCalibration();
 float getMedianValues(float data[], int len);
 extern Notification notificationPH;
 

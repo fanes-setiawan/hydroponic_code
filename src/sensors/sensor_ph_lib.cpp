@@ -12,6 +12,12 @@ void setupPhSensor()
     Serial.println("🔹 Memulai Sensor pH...");
     phSensor.begin();
     EEPROM.begin(512);
+    
+    if (checkEEPROMCalibration()) {
+        Serial.println("Sistem siap untuk proses berikutnya.");
+    } else {
+        Serial.println("Sistem membutuhkan kalibrasi.");
+    }
 
     CalibrationPhModel calibratePh = readDataCalibrationPhFromFirestore();
     if (calibratePh.status)
@@ -59,12 +65,45 @@ void setupPhSensor()
     }
 }
 
+bool checkEEPROMCalibration()
+{
+
+    int calibrationFlag = EEPROM.read(CALIBRATION_FLAG_ADDR);
+
+    Serial.print("Status Flag Kalibrasi: ");
+    if (calibrationFlag == 1)
+    {
+        Serial.println("Ada");
+    }
+    else
+    {
+        Serial.println("Tidak Ada");
+        return false;
+    }
+
+    float storedCalibrationValue;
+    EEPROM.get(CALIBRATION_VALUE_ADDR, storedCalibrationValue);
+
+    Serial.print("Nilai Kalibrasi yang Tersimpan: ");
+    Serial.println(storedCalibrationValue, 2);
+
+    if (storedCalibrationValue >= 4.0 && storedCalibrationValue <= 10.0)
+    {
+        Serial.println("Nilai kalibrasi valid.");
+        return true;
+    }
+    else
+    {
+        Serial.println("Nilai kalibrasi tidak valid.");
+        return false;
+    }
+}
+
 void calibratePhSensor(float voltage, float calibrationValue, const char *type)
 {
     Serial.print("[🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹][🔹]");
     delay(4000);
 
-    // 🛠 Debug EEPROM Flag
     int flagValue = EEPROM.read(CALIBRATION_FLAG_ADDR);
     Serial.print("📌 EEPROM Flag Status: ");
     Serial.println(flagValue); // Cek apakah flag bernilai 1 atau tidak

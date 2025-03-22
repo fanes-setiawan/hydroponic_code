@@ -7,5 +7,7 @@
 void runMixer();
 void stopMixer();
 void runMixer10s();
+void runWaterPump();
+void stopWaterPump();
 
 #endif

@@ -1,4 +1,5 @@
 #include "schedule_main.h"
+#include "schedule_run.h"
 
 #define UTC_OFFSET_HOURS 7
 #define EEPROM_ADDR 0
@@ -85,9 +86,9 @@ void checkingSchedule()
     }
 
     if (scheduleRun == timeNow && lastExecuted != localScheduleTime)
-    {
-        Serial.println("[FANES] ✅ Jadwal Dijalankan");
-        saveLastExecutedSchedule(localScheduleTime);
+    { 
+        notification.sendNotification("✅Schedule!!! ", "Schedule Dijalankan");
+        runSchedule(schedule);
     }
     else
     {

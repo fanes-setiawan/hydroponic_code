@@ -100,7 +100,6 @@ RemoteModel readDataRemoteFromFirestore()
         remoteModel.autoMode = fields["auto"]["booleanValue"];
         remoteModel.autoCheck = fields["autoCheck"]["integerValue"];
         remoteModel.isRemove = fields["isRemove"]["booleanValue"];
-
       }
     }
     else
@@ -166,6 +165,9 @@ ScheduleModel readDataScheduleFromFirestore()
   ScheduleModel scheduleModel;
   FirebaseJson structuredQuery;
   String timeNow = getTimestamp();
+  int lastCharIndex = timeNow.lastIndexOf(':');
+  if (lastCharIndex > 0)
+    timeNow = timeNow.substring(0, lastCharIndex) + ":00Z";
 
   structuredQuery.clear();
 
@@ -213,10 +215,14 @@ ScheduleModel readDataScheduleFromFirestore()
         JsonObject fields = document["fields"]["settings"]["mapValue"]["fields"];
         serializeJsonPretty(document, Serial);
 
-        scheduleModel.phUp = fields["phUp"]["doubleValue"];
-        scheduleModel.phDown = fields["phDown"]["doubleValue"];
-        scheduleModel.water = fields["water"]["doubleValue"];
-        scheduleModel.nutrisi = fields["nutrisi"]["doubleValue"];
+        scheduleModel.phUp = fields["phUp"].containsKey("doubleValue") ? fields["phUp"]["doubleValue"].as<float>() : (fields["phUp"].containsKey("stringValue") ? atof(fields["phUp"]["stringValue"]) : 0.0);
+
+        scheduleModel.phDown = fields["phDown"].containsKey("doubleValue") ? fields["phDown"]["doubleValue"].as<float>() : (fields["phDown"].containsKey("stringValue") ? atof(fields["phDown"]["stringValue"]) : 0.0);
+
+        scheduleModel.water = fields["water"].containsKey("doubleValue") ? fields["water"]["doubleValue"].as<float>() : (fields["water"].containsKey("stringValue") ? atof(fields["water"]["stringValue"]) : 0.0);
+
+        scheduleModel.nutrisi = fields["nutrisi"].containsKey("doubleValue") ? fields["nutrisi"]["doubleValue"].as<float>() : (fields["nutrisi"].containsKey("stringValue") ? atof(fields["nutrisi"]["stringValue"]) : 0.0);
+
         scheduleModel.mixer = fields["mixer"]["booleanValue"];
         scheduleModel.waterPump = fields["waterPump"]["booleanValue"];
         scheduleModel.autoRemot = fields["auto"]["booleanValue"];

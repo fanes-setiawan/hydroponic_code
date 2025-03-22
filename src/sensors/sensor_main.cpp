@@ -39,8 +39,11 @@ void checkingSensor(int intervalMinutes)
         float phValue = readFilteredPhValue();
         if (isFirstReading)
         {
-            tdsLevel = tdsValue;
+            tdsLevel = tdsValue; 
             isFirstReading = false;
+        }
+        if((double)phValue < 6.0 || (double)phValue > 7.0){
+            phValue = readFilteredPhValue();
         }
         if ((double)phValue <= 14.0)
         {
@@ -73,14 +76,31 @@ void checkingSensor(int intervalMinutes)
             sendDataTdsToFirestore(tdsLevel);
             if ((double)tdsLevel < 560.0 || (double)tdsLevel > 840.0)
             {
-              tdsLevel =  normalizeTDS(tdsLevel);
+              tdsLevel =  normalizeTDS(phValue , tdsLevel);
             }
         }
-        else if ((double)tdsValue <= 0.0)
+        else if ((double)tdsValue >= 0.0)
         {
             isFirstReading = true;
             tdsLevel = tdsValue;
             sendDataTdsToFirestore(tdsLevel);
+        }
+        if(double(phValue) > 6.0 && double(phValue) < 7.0 && double(tdsLevel) > 560.0 && double(tdsLevel) < 840.0){
+            dataEx.ppm = tdsLevel;
+            dataEx.pH = phValue;
+            dataEx.ppm_check = tdsLevel;
+            dataEx.pH_check = phValue;
+            dataEx.phDown = abs(0.0);
+            dataEx.phUp = abs(0.0);
+            dataEx.water = abs(0.0);
+            dataEx.nutrisi = abs(0.0);
+            dataEx.status = "NORMAL";
+            checkStatus();
+            Serial.println("-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-");
+            Serial.println("Status : " + dataEx.status);
+            oldStatusExcel.status = "NORMAL";
+            uploadData(dataEx);
+
         }
         Serial.println("TDS Value: " + String(tdsValue));
         Serial.println("Simulated TDS Level: " + String(tdsLevel));

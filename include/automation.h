@@ -12,7 +12,10 @@
 #include "generate.h"
 
 void automationPH(float phValue,float tdsValue);
-float normalizeTDS(float currentTDS);
+float normalizeTDS(float phValue, float currentTDS);
 float calculateVolumeToAdd(float currentTDS);
 float calculateWaterFilter(float currentTDS);
+void checkStatus();
+extern dataExcel oldStatusExcel;
+extern dataExcel dataEx;
 #endif

@@ -23,15 +23,16 @@ float Voltage;
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0;
 
-// sensor pin
 float waterTemp = 25.0;
 
 Notification notifMain;
 
+unsigned long lastCheckTime = 0;
+const unsigned long scheduleInterval = 40000;
+
 void setup()
 {
   Serial.begin(115200);
-
   pinMode(RELAY_NUTRISI, OUTPUT);
   pinMode(RELAY_PHUP, OUTPUT);
   pinMode(RELAY_PHDOWN, OUTPUT);
@@ -62,8 +63,10 @@ void loop()
   CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
   CalibrationPhModel calibrationPh = readDataCalibrationPhFromFirestore();
   RemoteModel remote = readDataRemoteFromFirestore();
-
-  // checkingSchedule();
+  if (millis() - lastCheckTime >= scheduleInterval) {  
+    checkingSchedule();
+    lastCheckTime = millis();
+  }
 
   if (remote.autoMode == true)
   {
@@ -95,23 +98,12 @@ void loop()
     patchDataRemoteToFirestore("isRemove", "false");
   }
 
-  Serial.println("========================");
-  Serial.print("Remote Water: ");
-  Serial.println(remote.water);
-  Serial.print("Remote pH Up: ");
-  Serial.println(remote.phUp);
-  Serial.print("Remote pH Down: ");
-  Serial.println(remote.phDown);
-  Serial.print("Remote Nutrisi: ");
-  Serial.println(remote.nutrisi);
-  Serial.println("========================");
-
   // larutan manual
   if ((double)remote.water != 0.0)
   {
     startPump(RELAY_WATER, remote.water);
     patchDataRemoteToFirestore("water", "0.0");
-    tdsLevel = calculateTDSLevel(tdsLevel , DOWN);
+    tdsLevel = calculateTDSLevel(tdsLevel, DOWN);
     Serial.print("[MAIN][DOWN]TDS Level: ");
     Serial.println(tdsLevel);
   }
@@ -129,31 +121,25 @@ void loop()
   {
     startPump(RELAY_NUTRISI, remote.nutrisi);
     patchDataRemoteToFirestore("nutrisi", "0.0");
-    tdsLevel = calculateTDSLevel(tdsLevel , UP);
+    tdsLevel = calculateTDSLevel(tdsLevel, UP);
     Serial.print("[MAIN][UP]TDS Level: ");
     Serial.println(tdsLevel);
   }
   if (remote.waterPump == true)
   {
-    startPump(RELAY_NUTRISI, 100);
+    runWaterPump();
   }
-  if(remote.mixer == true){
-    startPump(RELAY_WATER, 100);
+  if (remote.waterPump == false)
+  {
+    stopWaterPump();
   }
-  // if (remote.mixer == true)
-  // {
-  //   runMixer();
-  // }
-  // else
-  // {
-  //   stopMixer();
-  // }
 
-  // delay(1000);
-
-  // // if (remote.phDown != 0)
-  // // {
-  // //   Serial.print("Data pH DOWN AKAN DI RESTART");
-  // //   patchDataRemoteToFirestore("phDown", "0.0");
-  // // }
+  if (remote.mixer == true)
+  {
+    runMixer();
+  }
+  if (remote.mixer == false)
+  {
+    stopMixer();
+  }
 }
