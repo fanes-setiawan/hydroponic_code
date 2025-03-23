@@ -9,7 +9,7 @@ Notification::Notification() {
 
 void Notification::fetchToken() {
     HTTPClient http;
-    http.begin(firestoreUrl);  // Mengakses URL Firestore
+    http.begin(firestoreUrl);  
     int httpResponseCode = http.GET();
 
     if (httpResponseCode > 0) {
@@ -56,6 +56,22 @@ void Notification::sendNotification(String title, String body) {
     http.addHeader("Content-Type", "application/json");
 
     int httpResponseCode = http.POST(jsonPayload);
+
+    Serial.println("URL: ");
+    Serial.println(API_NOTIF);
+    Serial.println("SEND NOTIF :: ");
+    Serial.print("FCM Token: ");
+    Serial.println(fcmToken);
+    Serial.print("Title: ");
+    Serial.println(title);
+
+    if (httpResponseCode == 308) {  // Cek jika terjadi redirect
+        String newLocation = http.header("Location");  // Dapatkan URL baru dari header 'Location'
+        http.end();  // Tutup koneksi HTTP
+        http.begin( newLocation);  // Memulai koneksi baru pada URL yang di-redirect
+        httpResponseCode = http.POST(jsonPayload);  // Mengirim POST request lagi
+    }
+
 
     if (httpResponseCode > 0) {
         String response = http.getString();

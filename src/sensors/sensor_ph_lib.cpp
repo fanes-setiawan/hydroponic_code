@@ -12,7 +12,7 @@ void setupPhSensor()
     Serial.println("🔹 Memulai Sensor pH...");
     phSensor.begin();
     EEPROM.begin(512);
-    
+
     if (checkEEPROMCalibration()) {
         Serial.println("Sistem siap untuk proses berikutnya.");
     } else {
@@ -106,7 +106,7 @@ void calibratePhSensor(float voltage, float calibrationValue, const char *type)
 
     int flagValue = EEPROM.read(CALIBRATION_FLAG_ADDR);
     Serial.print("📌 EEPROM Flag Status: ");
-    Serial.println(flagValue); // Cek apakah flag bernilai 1 atau tidak
+    Serial.println(flagValue); 
 
     if (flagValue == 1)
     {

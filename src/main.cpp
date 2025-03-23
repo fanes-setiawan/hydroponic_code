@@ -59,7 +59,7 @@ void setup()
 }
 
 void loop()
-{
+{ 
   CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
   CalibrationPhModel calibrationPh = readDataCalibrationPhFromFirestore();
   RemoteModel remote = readDataRemoteFromFirestore();
