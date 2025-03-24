@@ -22,4 +22,5 @@ void runMixer10s(){
     digitalWrite(RELAY_MIXER,  LOW);
     delay(2500);
     digitalWrite(RELAY_MIXER,  HIGH);
+    delay(2500);
 }

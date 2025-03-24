@@ -2,13 +2,15 @@
 #define GENERATE_H
 #include <Arduino.h>
 
-enum TDSAdjustmentMode {
+
+
+enum AdjustmentMode{
     NORMAL,
     UP,
     DOWN
 };
 
 int getTDSLevel(int lowerBound, int upperBound);
-float calculateTDSLevel(float currentTDS, TDSAdjustmentMode mode);
-int getTDSLevel(int lowerBound, int upperBound);
+float calculateTDSLevel(float currentTDS, AdjustmentMode mode);
+float calculatePHLevel(float currentPH, AdjustmentMode mode);
 #endif

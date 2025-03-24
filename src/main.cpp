@@ -14,21 +14,22 @@
 #include "pins.h"
 #include "documentation.h"
 #include "controller_mixer.h"
-#include "sensor_main.h"
 #include "generate.h"
 
 int pH_Value;
 float Voltage;
-
-const long gmtOffset_sec = 7 * 3600;
-const int daylightOffset_sec = 0;
-
 float waterTemp = 25.0;
 
 Notification notifMain;
 
 unsigned long lastCheckTime = 0;
 const unsigned long scheduleInterval = 40000;
+unsigned long lastFirebaseReadTime = 0;
+const unsigned long firebaseReadInterval = 5000;
+
+RemoteModel remote;
+CalibrationTdsModel calibrationTds;
+CalibrationPhModel calibrationPh;
 
 void setup()
 {
@@ -40,6 +41,7 @@ void setup()
   pinMode(RELAY_MIXER, OUTPUT);
   pinMode(RELAY_WATER, OUTPUT);
   pinMode(TXS_OE, OUTPUT);
+
   digitalWrite(RELAY_NUTRISI, HIGH);
   digitalWrite(RELAY_PHUP, HIGH);
   digitalWrite(RELAY_PHDOWN, HIGH);
@@ -49,26 +51,32 @@ void setup()
   digitalWrite(TXS_OE, HIGH);
 
   connectToWiFi();
-  int sensorValue = analogRead(34);
-  Notification();
-
   setupTdsSensor(TDS_SENSOR_PIN);
   setupPhSensor();
   setupTime();
-  notification.sendNotification("mulai", "sistem hydroponik dimulai");
+  notifMain.sendNotification("mulai", "Sistem hydroponik dimulai");
 }
 
 void loop()
-{ 
-  CalibrationTdsModel calibrationTds = readDataCalibrationTdsFromFirestore();
-  CalibrationPhModel calibrationPh = readDataCalibrationPhFromFirestore();
-  RemoteModel remote = readDataRemoteFromFirestore();
-  if (millis() - lastCheckTime >= scheduleInterval) {  
+{
+  // Baca data dari Firestore hanya setiap 5 detik
+  if (millis() - lastFirebaseReadTime >= firebaseReadInterval)
+  {
+    calibrationTds = readDataCalibrationTdsFromFirestore();
+    calibrationPh = readDataCalibrationPhFromFirestore();
+    remote = readDataRemoteFromFirestore();
+    lastFirebaseReadTime = millis();
+  }
+
+  // Jalankan jadwal hanya setiap interval tertentu
+  if (millis() - lastCheckTime >= scheduleInterval)
+  {
     checkingSchedule();
     lastCheckTime = millis();
   }
 
-  if (remote.autoMode == true)
+  // Mode otomatis
+  if (remote.autoMode)
   {
     checkingSensor(remote.autoCheck);
     Serial.println("[DR.ROBOT] Auto Mode: ON");
@@ -79,67 +87,57 @@ void loop()
     Serial.println("[DR.ROBOT] Auto Mode: OFF");
   }
 
-  if (calibrationTds.status == true)
+  // Kalibrasi sensor hanya jika diperlukan
+  if (calibrationTds.status)
   {
     Serial.println("[DR.ROBOT] Kalibrasi TDS: ");
     setupTdsSensor(TDS_SENSOR_PIN);
   }
-  if (calibrationPh.status == true)
+  if (calibrationPh.status)
   {
     Serial.println("[DR.ROBOT] Kalibrasi pH: ");
-    delay(1000);
     setupPhSensor();
   }
-  if (remote.isRemove == true)
+  if (remote.isRemove)
   {
     Serial.println("[DR.ROBOT] Remove: ");
-    delay(1000);
     phSensor.resetEEPROM();
     patchDataRemoteToFirestore("isRemove", "false");
   }
 
-  // larutan manual
-  if ((double)remote.water != 0.0)
+  // Kontrol larutan manual hanya jika ada perubahan
+  if (remote.water > 0.0)
   {
     startPump(RELAY_WATER, remote.water);
     patchDataRemoteToFirestore("water", "0.0");
     tdsLevel = calculateTDSLevel(tdsLevel, DOWN);
-    Serial.print("[MAIN][DOWN]TDS Level: ");
-    Serial.println(tdsLevel);
   }
-  if ((double)remote.phDown != 0.0)
+  if (remote.phDown > 0.0)
   {
     startPump(RELAY_PHDOWN, remote.phDown);
     patchDataRemoteToFirestore("phDown", "0.0");
   }
-  if ((double)remote.phUp != 0.0)
+  if (remote.phUp > 0.0)
   {
     startPump(RELAY_PHUP, remote.phUp);
     patchDataRemoteToFirestore("phUp", "0.0");
   }
-  if ((double)remote.nutrisi != 0.0)
+  if (remote.nutrisi > 0.0)
   {
     startPump(RELAY_NUTRISI, remote.nutrisi);
     patchDataRemoteToFirestore("nutrisi", "0.0");
     tdsLevel = calculateTDSLevel(tdsLevel, UP);
-    Serial.print("[MAIN][UP]TDS Level: ");
-    Serial.println(tdsLevel);
-  }
-  if (remote.waterPump == true)
-  {
-    runWaterPump();
-  }
-  if (remote.waterPump == false)
-  {
-    stopWaterPump();
   }
 
-  if (remote.mixer == true)
-  {
+  // Kontrol pompa air dan mixer
+  if (remote.waterPump)
+    runWaterPump();
+  else
+    stopWaterPump();
+
+  if (remote.mixer)
     runMixer();
-  }
-  if (remote.mixer == false)
-  {
+  else
     stopMixer();
-  }
+  delay(100);
 }
