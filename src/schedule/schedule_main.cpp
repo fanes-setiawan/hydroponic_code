@@ -67,15 +67,9 @@ void checkingSchedule()
 
         return;
     }
-
     String localScheduleTime = convertUTCtoLocal(schedule.scheduled_time);
-    Serial.print("[FANES][TIME LOCAL] ");
-    Serial.println(localScheduleTime);
 
     String timeNow = getTimeNow().substring(0, 16);
-    Serial.print("[FANES][NOW] ");
-    Serial.println(timeNow);
-
     String lastExecuted = getLastExecutedSchedule();
 
     if (convertTimeToTimestamp(timeNow) > convertTimeToTimestamp(lastExecuted) + 1)

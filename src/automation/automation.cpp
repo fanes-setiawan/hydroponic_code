@@ -41,8 +41,7 @@ void automationPH(float phValue, float tdsValue)
         startPump(RELAY_PHDOWN, abs(mlToAdd));
     }
     delay(500);
-    float tdsCheck = calculateTDSLevel(tdsValue, NORMAL);
-    ;
+    float tdsCheck = readFilteredTdsValue();
     float phCheck = readFilteredPhValue();
     dataEx.pH_check = phCheck;
     dataEx.ppm_check = tdsCheck;
@@ -91,7 +90,7 @@ float normalizeTDS(float phValue, float currentTDS)
         startPump(RELAY_WATER, adjustmentVolume);
     }
     delay(500);
-    float tdsCheck = calculateTDSLevel(currentTDS, NORMAL);
+    float tdsCheck = readFilteredTdsValue();
     float phCheck = readFilteredPhValue();
     dataEx.pH_check = phCheck;
     dataEx.ppm_check = tdsCheck;
@@ -111,7 +110,7 @@ float normalizeTDS(float phValue, float currentTDS)
     dataEx.nutrisi = abs(0.0);
     delay(2000);
 
-    currentTDS = calculateTDSLevel(currentTDS, NORMAL);
+    currentTDS =  readFilteredTdsValue();;
 
     return currentTDS;
    }

@@ -55,7 +55,7 @@ void setup()
   setupTdsSensor(TDS_SENSOR_PIN);
   setupPhSensor();
   setupTime();
-  notification.sendNotification("mulai", "sistem hydroponik dimulai");
+  // notification.sendNotification("mulai", "sistem hydroponik dimulai");
 }
 
 void loop()
@@ -64,7 +64,7 @@ void loop()
   CalibrationPhModel calibrationPh = readDataCalibrationPhFromFirestore();
   RemoteModel remote = readDataRemoteFromFirestore();
   if (millis() - lastCheckTime >= scheduleInterval) {  
-    checkingSchedule();
+    // checkingSchedule();
     lastCheckTime = millis();
   }
 
@@ -103,7 +103,6 @@ void loop()
   {
     startPump(RELAY_WATER, remote.water);
     patchDataRemoteToFirestore("water", "0.0");
-    tdsLevel = calculateTDSLevel(tdsLevel, DOWN);
     Serial.print("[MAIN][DOWN]TDS Level: ");
     Serial.println(tdsLevel);
   }
@@ -121,7 +120,6 @@ void loop()
   {
     startPump(RELAY_NUTRISI, remote.nutrisi);
     patchDataRemoteToFirestore("nutrisi", "0.0");
-    tdsLevel = calculateTDSLevel(tdsLevel, UP);
     Serial.print("[MAIN][UP]TDS Level: ");
     Serial.println(tdsLevel);
   }

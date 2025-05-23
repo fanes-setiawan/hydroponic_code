@@ -34,15 +34,16 @@ void checkingSensor(int intervalMinutes)
         lastCheckTime = currentTime;
         saveTimeToEEPROM(lastCheckTime);
 
-        String timeNow = getTimeNow();
+        // String timeNow = getTimeNow();
         float tdsValue = readFilteredTdsValue();
         float phValue = readFilteredPhValue();
         if (isFirstReading)
         {
-            tdsLevel = tdsValue; 
+            tdsLevel = tdsValue;
             isFirstReading = false;
         }
-        if((double)phValue < 6.0 || (double)phValue > 7.0){
+        if ((double)phValue < 6.0 || (double)phValue > 7.0)
+        {
             phValue = readFilteredPhValue();
         }
         if ((double)phValue <= 14.0)
@@ -62,9 +63,13 @@ void checkingSensor(int intervalMinutes)
             }
             if ((double)phValue < 6.0 || (double)phValue > 7.0)
             {
+                // saya hide dulu
+
+                Serial.println("saya hiden dulu");
                 automationPH(phValue, tdsLevel);
             }
-        }
+        }\
+        
         else if ((double)phValue > 14.0 && isErrorSensorPH == false)
         {
             notifSensor.sendNotification("❌ Sensor pH", "Kalibrasi Ulang Diperlukan");
@@ -76,7 +81,9 @@ void checkingSensor(int intervalMinutes)
             sendDataTdsToFirestore(tdsLevel);
             if ((double)tdsLevel < 560.0 || (double)tdsLevel > 840.0)
             {
-              tdsLevel =  normalizeTDS(phValue , tdsLevel);
+                // saya hide dulu
+                Serial.println("saya hiden dulu");
+                  tdsLevel =  normalizeTDS(phValue , tdsLevel);
             }
         }
         else if ((double)tdsValue >= 0.0)
@@ -85,7 +92,8 @@ void checkingSensor(int intervalMinutes)
             tdsLevel = tdsValue;
             sendDataTdsToFirestore(tdsLevel);
         }
-        if(double(phValue) > 6.0 && double(phValue) < 7.0 && double(tdsLevel) > 560.0 && double(tdsLevel) < 840.0){
+        if (double(phValue) > 6.0 && double(phValue) < 7.0 && double(tdsLevel) > 560.0 && double(tdsLevel) < 840.0)
+        {
             dataEx.ppm = tdsLevel;
             dataEx.pH = phValue;
             dataEx.ppm_check = tdsLevel;
@@ -100,7 +108,6 @@ void checkingSensor(int intervalMinutes)
             Serial.println("Status : " + dataEx.status);
             oldStatusExcel.status = "NORMAL";
             uploadData(dataEx);
-
         }
         Serial.println("TDS Value: " + String(tdsValue));
         Serial.println("Simulated TDS Level: " + String(tdsLevel));

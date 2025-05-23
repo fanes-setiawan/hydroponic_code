@@ -22,7 +22,6 @@ void runSchedule(ScheduleModel setSchedule)
     {
         startPump(RELAY_NUTRISI, setSchedule.nutrisi);
         patchDataRemoteToFirestore("nutrisi", "0.0");
-        tdsLevel = calculateTDSLevel(tdsLevel, UP);
     }
     if ((double)setSchedule.phUp != 0.0)
     {
@@ -38,6 +37,5 @@ void runSchedule(ScheduleModel setSchedule)
     {
         startPump(RELAY_WATER, setSchedule.water);
         patchDataRemoteToFirestore("water", "0.0");
-        tdsLevel = calculateTDSLevel(tdsLevel, DOWN);
     }
 }

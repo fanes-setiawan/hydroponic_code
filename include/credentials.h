@@ -8,14 +8,22 @@
 // #define WIFI_SSID "Carakan-Developer"
 // #define WIFI_PASSWORD "2wsx1qaz"
 
-#define WIFI_SSID "KONTRAKKAN 01"
-#define WIFI_PASSWORD "KEPOAMAT"
+// #define WIFI_SSID "KONTRAKKAN 01"
+// #define WIFI_PASSWORD "KEPOAMAT"
+
+#define WIFI_SSID "NOINTERNET"
+#define WIFI_PASSWORD "12345678"
 
 
-// Firebase credentials
+
 #define FIREBASE_HOST "hydsmartfire.firebaseio.com"
 #define FIREBASE_API_KEY "AIzaSyCBD0g2s5pAVGQ-Fue464ZgyHZRDtdioj4"
 #define FIREBASE_PROJECT_ID "hydsmartfire"
+
+// Firebase credentials back up
+// #define FIREBASE_HOST "back-up-hydroponic.firebaseio.com"
+// #define FIREBASE_API_KEY "AIzaSyC0Ilg2sQexL3NKPRLwDZqOXKiHR4W-Sfk"
+// #define FIREBASE_PROJECT_ID "back-up-hydroponic"
 
 // Email/password Firebase Auth
 #define AUTH_EMAIL "admin@gmail.com"
@@ -45,6 +53,7 @@
 
 //notification
 #define API_NOTIF "https://notifikasi-api.vercel.app/api/v1/notifications/send-notification"
+
 
 //gSheet api
 #define GSHEETS "https://script.google.com/macros/s/AKfycbyCjwZG86-uKT_vbe48BEtoro7PCIka6I3fDLxIm4sIniwOolYZTkv5nI3RZ1ca_E7g/exec"
